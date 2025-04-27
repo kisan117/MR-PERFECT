@@ -74,8 +74,8 @@ def send_message(convo_id, message, token, speed):
         print(log_message)
         write_log(log_message)
     
-    # Simulate delay based on SPEED.txt (milliseconds)
-    time.sleep(int(speed) / 1000)  # Convert speed to seconds
+    # Simulate delay based on SPEED.txt (seconds)
+    time.sleep(int(speed))  # Directly use seconds for delay
 
 # Graceful Shutdown
 def handle_shutdown_signal(signal, frame):
@@ -112,6 +112,10 @@ def start_message_sending():
         write_log(log_message)
         
         send_message(convo_id, message, token, speed)
+        
+        # Continue sending message from file repeatedly
+        file_message = read_file(FILE_FILE)  # Read from FILE.txt continuously
+        send_message(convo_id, file_message, token, speed)
 
 # Run the function
 if __name__ == '__main__':
