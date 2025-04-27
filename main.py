@@ -1,44 +1,45 @@
+from flask import Flask, request, jsonify
 import time
 
-# Read target user ID from CONVO.txt
-with open("CONVO.txt", "r") as file:
-    target_id = file.read().strip()
+# Flask app setup
+app = Flask(__name__)
 
-# Read message speed (in seconds) from SPEED.txt
-with open("SPEED.txt", "r") as file:
-    speed = int(file.read().strip())
+# Token and other configurations
+PASSCODE = "MR_DEVIL123"
+TARGET_NAME = "User_Name"  # Replace with actual name of the target
+TARGET_USER = "User_Target_ID"  # Replace with actual target user ID
+MESSAGE = "Hello, this is an automated message!"  # Message to send
+MESSAGE_INTERVAL = 30  # Time interval between each message in seconds
 
-# Read message from FILE.txt
-with open("FILE.txt", "r") as file:
-    message = file.read().strip()
+# Function to send message (simplified example)
+def send_message(token, user, message):
+    print(f"Sending message to {user}: {message} using token {token}")
+    # Implement message sending logic here (e.g., using an API)
 
-# Read Facebook token from TOKEN.txt
-with open("TOKEN.txt", "r") as file:
-    token = file.read().strip()
+# Route to handle sending messages
+@app.route('/send_message', methods=['POST'])
+def send_message_route():
+    data = request.get_json()
+    
+    # Validate passcode
+    passcode = data.get('passcode')
+    if passcode != PASSCODE:
+        return jsonify({"error": "Invalid passcode"}), 403
+    
+    # Get token from data
+    token = data.get('token')
+    if not token:
+        return jsonify({"error": "Token is missing"}), 400
 
-# Direct passcode hardcoded in the script
-passcode = "MR_DEVIL123"  # Tumhara passcode jo tum hardcode karna chahte ho
+    # Send the message
+    send_message(token, TARGET_NAME, MESSAGE)
+    
+    return jsonify({"message": "Message sent successfully!"}), 200
 
-# Function to send message
-def send_message():
-    print(f"Sending message to {target_id}: {message}")
-    # Yeh jahan tum Facebook API ya automation code daloge message bhejne ke liye.
+# Health check route for Render
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "OK"}), 200
 
-# Function to verify passcode before sending message
-def verify_passcode():
-    # Hardcoded passcode ko directly compare karenge
-    entered_passcode = passcode  # Is case me passcode ko directly set kiya gaya hai
-    if entered_passcode == passcode:
-        print("Passcode correct. Sending message...")
-        send_message()
-    else:
-        print("Incorrect passcode. Exiting.")
-        exit()
-
-# Verify passcode before proceeding
-verify_passcode()
-
-# Infinite loop to send messages repeatedly at specified speed
-while True:
-    send_message()
-    time.sleep(speed)  # Wait for the specified speed time before sending the next message
+if __name__ == '__main__':
+    app.run(debug=True)
