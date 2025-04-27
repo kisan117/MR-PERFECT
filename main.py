@@ -43,7 +43,10 @@ def load_config():
         convo_id = read_file(CONVO_FILE)
         return token, name, file_content, speed, convo_id
     except FileNotFoundError:
-        write_log("Error: One or more files are missing.")
+        write_log("Error: One or more files are missing.")  # Fixed the error here
+        return None, None, None, None, None
+    except Exception as e:
+        write_log(f"Error reading files: {str(e)}")  # Fixed the error here
         return None, None, None, None, None
 
 # Function to send message via Facebook Graph API
@@ -86,4 +89,30 @@ def start_message_sending():
     token, name, file_content, speed, convo_id = load_config()
     
     if not all([token, name, file_content, speed, convo_id]):
-        log_message = "Error: One
+        log_message = "Error: One or more files are missing."
+        print(log_message)
+        write_log(log_message)
+        return
+
+    # Construct message
+    message = f"Hello {name}, this is a test message! Content: {file_content}"
+    
+    # Setup graceful shutdown on signal (Ctrl+C or SIGINT)
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+
+    log_message = "Message sending started... Press Ctrl+C to stop."
+    print(log_message)
+    write_log(log_message)
+    
+    # Start sending messages repeatedly until manually stopped
+    while True:
+        # Print log message with sender's name before sending
+        log_message = f"Message sent by MR DEVIL: {message}"
+        print(log_message)
+        write_log(log_message)
+        
+        send_message(convo_id, message, token, speed)
+
+# Run the function
+if __name__ == '__main__':
+    start_message_sending()
