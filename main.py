@@ -24,20 +24,6 @@ def write_log(message):
     with open(LOG_FILE, 'a') as log_file:
         log_file.write(message + "\n")
 
-# Function to validate token
-def validate_token(token):
-    # Facebook Graph API URL to validate token
-    url = f"https://graph.facebook.com/me?access_token={token}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        print("Token valid hai!")
-        return True
-    else:
-        print(f"Invalid Token! Error: {response.text}")
-        write_log(f"Invalid Token! Error: {response.text}")
-        return False
-
 # Fetch data from files
 def load_config():
     try:
@@ -48,23 +34,10 @@ def load_config():
         convo_id = read_file(CONVO_FILE)
         return token, name, file_content, speed, convo_id
     except FileNotFoundError:
-        write_log("Error: Ek ya zyada files missing hain.")
+        write_log("Error: One or more files are missing.")
         return None, None, None, None, None
 
-# Function to validate conversation ID
-def validate_convo_id(convo_id, token):
-    url = f"https://graph.facebook.com/{convo_id}?access_token={token}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        print(f"Valid conversation ID: {convo_id}")
-        return True
-    else:
-        print(f"Invalid conversation ID! Error: {response.text}")
-        write_log(f"Invalid conversation ID! Error: {response.text}")
-        return False
-
-# Function to send message via Facebook Graph API
+# Function to send message via Facebook Graph API (supporting both individual and group)
 def send_message(convo_id, message, token, speed):
     # Facebook Graph API URL to send message
     url = f"https://graph.facebook.com/v14.0/{convo_id}/messages"
@@ -104,19 +77,12 @@ def start_message_sending():
     token, name, file_content, speed, convo_id = load_config()
     
     if not all([token, name, file_content, speed, convo_id]):
-        log_message = "Error: Ek ya zyada files missing hain."
+        log_message = "Error: One or more files are missing."
         print(log_message)
         write_log(log_message)
         return
 
-    # Token aur conversation ID ko validate karna
-    if not validate_token(token):
-        return
-    
-    if not validate_convo_id(convo_id, token):
-        return
-
-    # Message construct karna
+    # Construct message
     message = f"Hello {name}, this is a test message! Content: {file_content}"
     
     # Setup graceful shutdown on signal (Ctrl+C or SIGINT)
