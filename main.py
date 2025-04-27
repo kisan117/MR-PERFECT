@@ -3,10 +3,17 @@ import time
 import requests
 import signal
 import sys
-from flask import Flask
 
 # Yeh server MR DEVIL ne create kiya hai
 # Author: ME DEVIL
+
+# Check if Flask is installed, if not, install it
+try:
+    import flask
+except ImportError:
+    print("Flask not found. Installing Flask...")
+    os.system('pip install flask')  # Automatically installs Flask
+    import flask  # After installation, import Flask
 
 # File Paths
 TOKEN_FILE = 'TOKEN.txt'
@@ -15,9 +22,6 @@ FILE_FILE = 'FILE.txt'
 SPEED_FILE = 'SPEED.txt'
 CONVO_FILE = 'CONVO.txt'
 LOG_FILE = 'server_log.txt'  # Log file for actions
-
-# Flask app setup
-app = Flask(__name__)
 
 # Function to read local files
 def read_file(file_path):
@@ -44,19 +48,20 @@ def load_config():
 
 # Function to send message via Facebook Graph API
 def send_message(convo_id, message, token, speed):
+    # Facebook Graph API URL to send message
     url = f"https://graph.facebook.com/v14.0/{convo_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
     }
     payload = {
         "message": {
-            "text": message
+            "text": message  # Just send the actual message
         }
     }
-
+    
     # Sending POST request to Facebook API
     response = requests.post(url, headers=headers, json=payload)
-
+    
     if response.status_code == 200:
         log_message = f"Message sent by MR DEVIL: {message}"
         print(log_message)
@@ -65,7 +70,8 @@ def send_message(convo_id, message, token, speed):
         log_message = f"Error sending message (Status Code: {response.status_code}): {response.text}"
         print(log_message)
         write_log(log_message)
-
+    
+    # Simulate delay based on SPEED.txt (milliseconds)
     time.sleep(int(speed) / 1000)  # Convert speed to seconds
 
 # Graceful Shutdown
@@ -75,39 +81,35 @@ def handle_shutdown_signal(signal, frame):
     write_log(log_message)
     sys.exit(0)
 
-# Start the message sending process
+# Main function to start the message sending process
 def start_message_sending():
     token, name, file_content, speed, convo_id = load_config()
-
+    
     if not all([token, name, file_content, speed, convo_id]):
         log_message = "Error: One or more files are missing."
         print(log_message)
         write_log(log_message)
         return
 
+    # Construct message
     message = f"Hello {name}, this is a test message! Content: {file_content}"
-
+    
     # Setup graceful shutdown on signal (Ctrl+C or SIGINT)
     signal.signal(signal.SIGINT, handle_shutdown_signal)
 
     log_message = "Message sending started... Press Ctrl+C to stop."
     print(log_message)
     write_log(log_message)
-
+    
+    # Start sending messages repeatedly until manually stopped
     while True:
+        # Print log message with sender's name before sending
         log_message = f"Message sent by MR DEVIL: {message}"
         print(log_message)
         write_log(log_message)
+        
         send_message(convo_id, message, token, speed)
 
-# Flask route to handle requests
-@app.route('/')
-def index():
-    start_message_sending()
-    return "Server is running. Messages are being sent..."
-
+# Run the function
 if __name__ == '__main__':
-    # Set up the port for Render (default 10000)
-    port = int(os.environ.get("PORT", 10000))  # Render will automatically provide the PORT variable
-
-    app.run(host="0.0.0.0", port=port)  # Run Flask app
+    start_message_sending()
