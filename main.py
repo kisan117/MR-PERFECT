@@ -4,7 +4,7 @@ import requests
 import signal
 import sys
 
-# This server created by MR DEVIL
+# Yeh server MR DEVIL ne create kiya hai
 # Author: ME DEVIL
 # File Paths
 TOKEN_FILE = 'TOKEN.txt'
@@ -12,26 +12,31 @@ NAME_FILE = 'NAME.txt'
 FILE_FILE = 'FILE.txt'
 SPEED_FILE = 'SPEED.txt'
 CONVO_FILE = 'CONVO.txt'
+PASS_FILE = 'PASS.txt'  # Password file for additional security
 LOG_FILE = 'server_log.txt'  # Log file for actions
 
 # Function to read local files
 def read_file(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            return file.read().strip()
-    except FileNotFoundError:
-        write_log(f"Error: {file_path} not found.")
-        print(f"Error: {file_path} not found.")
-        sys.exit(1)
-    except Exception as e:
-        write_log(f"Error reading {file_path}: {str(e)}")
-        print(f"Error reading {file_path}: {str(e)}")
-        sys.exit(1)
+    with open(file_path, 'r') as file:
+        return file.read().strip()
 
 # Function to write logs to a file
 def write_log(message):
     with open(LOG_FILE, 'a') as log_file:
         log_file.write(message + "\n")
+
+# Function to check password
+def check_password():
+    correct_password = "MR DEVIL SERVER CREATER"  # Hardcoded password
+    entered_password = input("Enter the password to start the server: ").strip()
+    
+    if entered_password == correct_password:
+        write_log("Password is correct. Starting the message sender...")
+        return True
+    else:
+        write_log("Incorrect password attempt. Exiting...")
+        print("Incorrect password. Exiting...")
+        sys.exit(1)
 
 # Fetch data from files
 def load_config():
@@ -43,17 +48,11 @@ def load_config():
         convo_id = read_file(CONVO_FILE)
         return token, name, file_content, speed, convo_id
     except FileNotFoundError:
-        write_log("Error: One or more files are missing.")  # Fixed the error here
-        return None, None, None, None, None
-    except Exception as e:
-        write_log(f"Error reading files: {str(e)}")  # Fixed the error here
+        write_log("Error: One or more files are missing.")
         return None, None, None, None, None
 
 # Function to send message via Facebook Graph API
 def send_message(convo_id, message, token, speed):
-    # Clean the token by removing any leading/trailing whitespaces or newlines
-    token = token.strip()
-
     # Facebook Graph API URL to send message
     url = f"https://graph.facebook.com/v14.0/{convo_id}/messages"
     headers = {
@@ -77,8 +76,8 @@ def send_message(convo_id, message, token, speed):
         print(log_message)
         write_log(log_message)
     
-    # Simulate delay based on SPEED.txt (seconds)
-    time.sleep(int(speed))  # Directly use seconds for delay
+    # Simulate delay based on SPEED.txt (milliseconds)
+    time.sleep(int(speed) / 1000)  # Convert speed to seconds
 
 # Graceful Shutdown
 def handle_shutdown_signal(signal, frame):
@@ -89,6 +88,10 @@ def handle_shutdown_signal(signal, frame):
 
 # Main function to start the message sending process
 def start_message_sending():
+    # Check password before starting the server
+    if not check_password():
+        return
+    
     token, name, file_content, speed, convo_id = load_config()
     
     if not all([token, name, file_content, speed, convo_id]):
@@ -101,7 +104,7 @@ def start_message_sending():
     message = f"Hello {name}, this is a test message! Content: {file_content}"
     
     # Setup graceful shutdown on signal (Ctrl+C or SIGINT)
-    signal.signal(signal.SIGINT, handle_shutdown_signal)  # Fixed line here
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
 
     log_message = "Message sending started... Press Ctrl+C to stop."
     print(log_message)
@@ -115,11 +118,9 @@ def start_message_sending():
         write_log(log_message)
         
         send_message(convo_id, message, token, speed)
-        
-        # Continue sending message from file repeatedly
-        file_message = read_file(FILE_FILE)  # Read from FILE.txt continuously
-        send_message(convo_id, file_message, token, speed)
 
 # Run the function
 if __name__ == '__main__':
+    # Port setup for Render environment (binding to port 10000)
+    port = int(os.environ.get("PORT", 10000))  # Use the PORT environment variable
     start_message_sending()
