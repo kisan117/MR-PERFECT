@@ -16,19 +16,18 @@ with open("FILE.txt", "r") as file:
 with open("TOKEN.txt", "r") as file:
     token = file.read().strip()
 
-# Read passcode from PASS.txt
-with open("PASS.txt", "r") as file:
-    passcode = file.read().strip()
+# Direct passcode hardcoded in the script
+passcode = "MR_DEVIL123"  # Tumhara passcode jo tum hardcode karna chahte ho
 
 # Function to send message
 def send_message():
     print(f"Sending message to {target_id}: {message}")
-    # Here you would integrate your messaging code using the token.
-    # This could be a direct API request, for example.
+    # Yeh jahan tum Facebook API ya automation code daloge message bhejne ke liye.
 
-# Function to verify passcode
+# Function to verify passcode before sending message
 def verify_passcode():
-    entered_passcode = input("Enter passcode: ")
+    # Hardcoded passcode ko directly compare karenge
+    entered_passcode = passcode  # Is case me passcode ko directly set kiya gaya hai
     if entered_passcode == passcode:
         print("Passcode correct. Sending message...")
         send_message()
