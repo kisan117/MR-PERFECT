@@ -12,7 +12,6 @@ NAME_FILE = 'NAME.txt'
 FILE_FILE = 'FILE.txt'
 SPEED_FILE = 'SPEED.txt'
 CONVO_FILE = 'CONVO.txt'
-PASS_FILE = 'PASS.txt'  # Password file for additional security
 LOG_FILE = 'server_log.txt'  # Log file for actions
 
 # Function to read local files
@@ -24,19 +23,6 @@ def read_file(file_path):
 def write_log(message):
     with open(LOG_FILE, 'a') as log_file:
         log_file.write(message + "\n")
-
-# Function to check password
-def check_password():
-    correct_password = "MR DEVIL SERVER CREATER"  # Hardcoded password
-    entered_password = input("Enter the password to start the server: ").strip()
-    
-    if entered_password == correct_password:
-        write_log("Password is correct. Starting the message sender...")
-        return True
-    else:
-        write_log("Incorrect password attempt. Exiting...")
-        print("Incorrect password. Exiting...")
-        sys.exit(1)
 
 # Fetch data from files
 def load_config():
@@ -88,10 +74,6 @@ def handle_shutdown_signal(signal, frame):
 
 # Main function to start the message sending process
 def start_message_sending():
-    # Check password before starting the server
-    if not check_password():
-        return
-    
     token, name, file_content, speed, convo_id = load_config()
     
     if not all([token, name, file_content, speed, convo_id]):
