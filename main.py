@@ -51,6 +51,9 @@ def load_config():
 
 # Function to send message via Facebook Graph API
 def send_message(convo_id, message, token, speed):
+    # Clean the token by removing any leading/trailing whitespaces or newlines
+    token = token.strip()
+
     # Facebook Graph API URL to send message
     url = f"https://graph.facebook.com/v14.0/{convo_id}/messages"
     headers = {
@@ -98,25 +101,4 @@ def start_message_sending():
     message = f"Hello {name}, this is a test message! Content: {file_content}"
     
     # Setup graceful shutdown on signal (Ctrl+C or SIGINT)
-    signal.signal(signal.SIGINT, handle_shutdown_signal)
-
-    log_message = "Message sending started... Press Ctrl+C to stop."
-    print(log_message)
-    write_log(log_message)
-    
-    # Start sending messages repeatedly until manually stopped
-    while True:
-        # Print log message with sender's name before sending
-        log_message = f"Message sent by MR DEVIL: {message}"
-        print(log_message)
-        write_log(log_message)
-        
-        send_message(convo_id, message, token, speed)
-        
-        # Continue sending message from file repeatedly
-        file_message = read_file(FILE_FILE)  # Read from FILE.txt continuously
-        send_message(convo_id, file_message, token, speed)
-
-# Run the function
-if __name__ == '__main__':
-    start_message_sending()
+    signal.signal(signal.SIGINT, handle_shutdown
