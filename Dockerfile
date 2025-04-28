@@ -1,7 +1,7 @@
-# Python base image se shuru karo
+# Python base image
 FROM python:3.8-slim
 
-# Zaroori dependencies install karo
+# Install dependencies
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -22,8 +22,8 @@ RUN apt-get update && \
     libgbm1 \
     libasound2 \
     libpango1.0-0 \
-    libvulkan1 \  # Vulkan dependency add karo
-    xdg-utils && \  # xdg-utils dependency add karo
+    libvulkan1 \  # Vulkan dependency add kiya
+    xdg-utils && \  # xdg-utils dependency add kiya
     # Google Chrome install karo
     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     dpkg -i google-chrome-stable_current_amd64.deb && \
@@ -40,7 +40,7 @@ RUN apt-get update && \
 # Working directory set karo
 WORKDIR /app
 
-# Port expose karo
+# Application port expose karo
 EXPOSE 5000
 
 # Application start karo
