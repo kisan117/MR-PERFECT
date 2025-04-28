@@ -7,143 +7,78 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from flask import Flask, render_template_string, request
 from threading import Thread
+import os
 
-# Flask app initialization
 app = Flask(__name__)
 
-# Global variable to control message sending
 stop_flag = False
 
-# Set up Chrome options for headless mode (optional)
+# Setup Chrome Options
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Run browser in background (optional)
+chrome_options.add_argument("--headless")  # Headless mode
 chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.binary_location = "/usr/bin/google-chrome"  # Chrome binary path for Render
 
-# Set up the WebDriver
+# Setup WebDriver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # Open WhatsApp Web
 driver.get("https://web.whatsapp.com/")
+print("WhatsApp QR Code scan kar lo...")
+time.sleep(20)  # User ko scan karne ka time mile
 
-# Wait for QR Code scan
-print("Please scan the QR code from WhatsApp Web...")
-time.sleep(15)  # Adjust this if necessary to give time for scanning the QR code
-
-# Define the target contact/group
-target = "MR DEVIL"  # Contact or group name in WhatsApp
-
-# Function to read messages from file
-def read_messages_from_file(filename):
-    with open(filename, "r") as file:
-        messages = file.readlines()
-    return [msg.strip() for msg in messages]
-
-# Function to read delay time from SPEED.txt file
-def get_delay_from_file():
+# Function to send messages
+def send_messages(contact_name, message_text, delay):
+    global stop_flag
     try:
-        with open("SPEED.txt", "r") as file:
-            delay = int(file.read().strip())  # Read and convert the delay to integer
-            return delay
-    except FileNotFoundError:
-        print("SPEED.txt file not found! Using default delay of 5 seconds.")
-        return 5  # Default delay if the file is not found
-    except ValueError:
-        print("Invalid value in SPEED.txt! Using default delay of 5 seconds.")
-        return 5  # Default delay if the value is not valid
+        while not stop_flag:
+            # Search contact/group
+            search_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]')
+            search_box.clear()
+            search_box.send_keys(contact_name)
+            search_box.send_keys(Keys.ENTER)
+            time.sleep(2)
 
-# Function to send message with delay and loop for repeated messages
-def send_message(contact_name, messages, delay):
-    global stop_flag  # Use the global stop_flag
-    try:
-        while True:  # Infinite loop to repeat sending messages
-            if stop_flag:  # If stop flag is set to True, exit the loop
-                print("Message sending stopped.")
-                break
+            # Send message
+            message_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+            message_box.send_keys(message_text)
+            message_box.send_keys(Keys.ENTER)
+            print(f"Message sent to {contact_name}: {message_text}")
 
-            for message in messages:  # Loop through each message
-                # Search for the contact/group
-                search_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]')
-                search_box.clear()
-                search_box.send_keys(contact_name)
-                search_box.send_keys(Keys.ENTER)
-                time.sleep(2)
-
-                # Find the message box and send the message
-                message_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="1"]')
-                message_box.send_keys(message)
-                message_box.send_keys(Keys.ENTER)
-                print(f"Message sent to {contact_name}: {message}")
-
-                # Wait for the specified delay before sending the next message
-                time.sleep(delay)  # Delay between messages
-
+            time.sleep(delay)
     except Exception as e:
-        print(f"Error while sending message: {str(e)}")
+        print(f"Error: {str(e)}")
 
-# Flask route to control message sending
+# Home page
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global stop_flag  # Use the global stop flag to stop messages
+    global stop_flag
     if request.method == "POST":
-        action = request.form.get('action')
-        if action == "stop":
-            stop_flag = True  # Set stop flag to True to stop message sending
-            return "Message sending has been stopped."
-        elif action == "start":
-            stop_flag = False  # Set stop flag to False to start sending messages
-            messages = read_messages_from_file("messages.txt")  # Replace with your actual file path
-            delay = get_delay_from_file()  # Get the delay from SPEED.txt
-            thread = Thread(target=send_message, args=(target, messages, delay))  # Use delay from file
+        if request.form.get("action") == "start":
+            stop_flag = False
+            contact_name = request.form["target"]
+            message_text = request.form["message"]
+            delay = int(request.form.get("delay", 5))  # Default delay = 5 seconds
+            thread = Thread(target=send_messages, args=(contact_name, message_text, delay))
             thread.start()
-            return "Message sending has started."
+            return "Messages sending started!"
+        elif request.form.get("action") == "stop":
+            stop_flag = True
+            return "Messages sending stopped!"
+    
     return render_template_string('''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>WhatsApp Message Bot</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; text-align: center; }
-        form {
-            background: white;
-            padding: 20px;
-            margin: 30px auto;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px grey;
-        }
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-        }
-        button {
-            background: green;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .stop-btn {
-            background: red;
-        }
-        .header {
-            font-size: 24px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <h2>WhatsApp Auto Message Bot</h2>
-    <p class="header">Welcome to the WhatsApp Auto Message Bot!</p>
-    <form action="/" method="post">
-        <button type="submit" name="action" value="start">Start Sending Messages</button>
-        <button type="submit" name="action" value="stop" class="stop-btn">Stop Sending Messages</button>
+    <h1>MR DEVIL WhatsApp Bot</h1>
+    <form method="post">
+        <input type="text" name="target" placeholder="Contact ya Group Name" required><br><br>
+        <input type="text" name="message" placeholder="Message Text" required><br><br>
+        <input type="number" name="delay" placeholder="Delay (seconds)" value="5"><br><br>
+        <button type="submit" name="action" value="start">Start Sending</button>
+        <button type="submit" name="action" value="stop">Stop Sending</button>
     </form>
-</body>
-</html>
-''')
+    ''')
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)  # Specify the port (5000) or any other available port
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
