@@ -1,3 +1,3 @@
 git add Dockerfile
-git commit -m "Add Dockerfile for app deployment"
-git push origin main
+git commit -m "Added Dockerfile for Render deployment"
+git push origin main  
