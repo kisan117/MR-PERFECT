@@ -1,10 +1,7 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Python base image se shuru karo
+FROM python:3.8-slim
 
-# Set the working directory in the container
-WORKDIR /app
-
-# Install dependencies
+# Zaroori dependencies install karo
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -25,23 +22,26 @@ RUN apt-get update && \
     libgbm1 \
     libasound2 \
     libpango1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    && \
-    # Install Google Chrome
+    libvulkan1 \  # Vulkan dependency add karo
+    xdg-utils && \  # xdg-utils dependency add karo
+    # Google Chrome install karo
     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     dpkg -i google-chrome-stable_current_amd64.deb && \
     apt-get -f install -y && \
-    # Install ChromeDriver
+    # ChromeDriver install karo
     LATEST=$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
     wget https://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/local/bin/ && \
     rm chromedriver_linux64.zip && \
-    # Install Python dependencies
+    # Python dependencies install karo
     pip install --no-cache-dir -r requirements.txt
 
-# Expose the port Render will use
+# Working directory set karo
+WORKDIR /app
+
+# Port expose karo
 EXPOSE 5000
 
-# Run the application
+# Application start karo
 CMD ["python", "main.py"]
