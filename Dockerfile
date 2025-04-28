@@ -22,26 +22,26 @@ RUN apt-get update && \
     libgbm1 \
     libasound2 \
     libpango1.0-0 \
-    libvulkan1 \  # Vulkan dependency add kiya
-    xdg-utils && \  # xdg-utils dependency add kiya
-    # Google Chrome install karo
+    libvulkan1 \  # Vulkan dependency
+    xdg-utils && \  # xdg-utils dependency
+    # Install Google Chrome
     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     dpkg -i google-chrome-stable_current_amd64.deb && \
     apt-get -f install -y && \
-    # ChromeDriver install karo
+    # Install ChromeDriver
     LATEST=$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
     wget https://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/local/bin/ && \
     rm chromedriver_linux64.zip && \
-    # Python dependencies install karo
+    # Install Python dependencies
     pip install --no-cache-dir -r requirements.txt
 
-# Working directory set karo
+# Set the working directory
 WORKDIR /app
 
-# Application port expose karo
+# Expose the application port
 EXPOSE 5000
 
-# Application start karo
+# Start the application
 CMD ["python", "main.py"]
