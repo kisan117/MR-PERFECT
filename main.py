@@ -1,78 +1,75 @@
 from flask import Flask, request, render_template_string
 import requests
-import os
-import re
 
 app = Flask(__name__)
 
-# HTML Page
-html_template = '''
+html_template = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>MR DEVIL TOKEN GENERATOR</title>
+    <meta charset="utf-8">
+    <title>MR DEVIL TOKEN CHECKER</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #111; color: white; text-align: center; padding-top: 50px; }
-        textarea { width: 80%; height: 100px; border-radius: 8px; }
-        input[type="submit"] { padding: 10px 20px; border: none; background: green; color: white; border-radius: 5px; margin-top: 10px; }
-        .token { margin-top: 20px; word-break: break-all; background: #222; padding: 10px; border-radius: 8px; }
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>MR DEVIL TOKEN SERVER</h1>
+    <h1>MR DEVIL TOKEN CHECKER</h1>
     <form method="POST">
-        <textarea name="cookie" placeholder="Enter your Facebook cookie here..." required></textarea><br><br>
-        <input type="submit" value="Generate Token">
+        <input type="text" name="access_token" placeholder="Enter Access Token" required>
+        <button type="submit">Check</button>
     </form>
-    {% if token %}
-        <div class="token">
-            <h3>Your Token:</h3>
-            <p>{{ token }}</p>
+    {% if result %}
+        <div class="result">{{ result }}</div>
+    {% endif %}
+    {% if groups %}
+        <div class="result">
+            <h3>Groups Found:</h3>
+            <ul>
+                {% for group in groups %}
+                    <li>{{ group.name }} ({{ group.id }})</li>
+                {% endfor %}
+            </ul>
         </div>
     {% endif %}
 </body>
 </html>
-'''
+"""
 
-# Extract Token function
-def extract_token(cookie):
-    try:
-        headers = {
-            'cookie': cookie,
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'
-        }
-        url = 'https://m.facebook.com/composer/ocelot/async_loader/?publisher=feed'
-        response = requests.get(url, headers=headers)
-        
-        # Debugging: Print the full response text to check what Facebook returns
-        print("Response Text:", response.text)
-
-        # Check if session is valid or cookie is expired
-        if "for (;;);" in response.text or "login" in response.url:
-            return 'Session expired or invalid cookie!'
-
-        # Extract token using regex
-        match = re.search(r'"accessToken":"(EAA\w+)"', response.text)
-        if match:
-            token = match.group(1)
-            return token
-        else:
-            return 'Token not found. Make sure the cookie is fresh and correct.'
-    except Exception as e:
-        return f'Error: {str(e)}'
-
-# Flask Routes
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/", methods=["GET", "POST"])
 def index():
-    token = None
-    if request.method == 'POST':
-        cookie = request.form.get('cookie')
-        print(f"Received Cookie: {cookie}")  # Debugging: Print the received cookie
-        if cookie:
-            token = extract_token(cookie)
-    return render_template_string(html_template, token=token)
+    result = None
+    groups = None
+    if request.method == "POST":
+        token = request.form.get("access_token")
+        try:
+            res = requests.get(f"https://graph.facebook.com/me/groups?access_token={token}")
+            data = res.json()
+            if "data" in data:
+                result = "Valid Token"
+                groups = data["data"]
+            else:
+                result = "Invalid or expired token."
+        except Exception as e:
+            result = f"Error: {str(e)}"
+    return render_template_string(html_template, result=result, groups=groups)
 
-# Main
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
