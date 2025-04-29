@@ -14,26 +14,19 @@
         <label for="messages">Messages:</label><br>
         <textarea id="messages" name="messages" rows="4" cols="50" required></textarea><br><br>
 
+        <label for="speed">Speed (in milliseconds between messages):</label><br>
+        <input type="number" id="speed" name="speed" value="1000"><br><br>
+
         <label for="files">Upload Files (optional):</label><br>
         <input type="file" id="files" name="files" multiple><br><br>
 
         <input type="submit" value="Send Message">
     </form>
 
-    <h2>Scan QR Code to connect WhatsApp:</h2>
-    <img id="qrCode" src="" alt="QR Code" style="width: 300px; height: 300px;">
-
-    <script>
-        async function loadQRCode() {
-            const response = await fetch('/qr');
-            const data = await response.text();
-            if (data.startsWith('data:image')) {
-                document.getElementById('qrCode').src = data;
-            } else {
-                setTimeout(loadQRCode, 2000); // Retry every 2 seconds
-            }
-        }
-        loadQRCode();
-    </script>
+    <br><br>
+    <h2>Stop Message Sending</h2>
+    <form action="/stop" method="POST">
+        <input type="submit" value="Stop Sending">
+    </form>
 </body>
 </html>
