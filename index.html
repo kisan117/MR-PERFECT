@@ -1,0 +1,24 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Message Sender</title>
+</head>
+<body>
+    <h1>WhatsApp Message Sender</h1>
+    <form action="/send" method="POST" enctype="multipart/form-data">
+        <label for="number">Recipient Number (with country code):</label><br>
+        <input type="text" id="number" name="number" required><br><br>
+
+        <label for="messages">Messages:</label><br>
+        <textarea id="messages" name="messages" rows="4" cols="50" required></textarea><br><br>
+
+        <label for="files">Upload Files (optional):</label><br>
+        <input type="file" id="files" name="files" multiple><br><br>
+
+        <input type="submit" value="Send Message">
+    </form>
+</body>
+</html>
