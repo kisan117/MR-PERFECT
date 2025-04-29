@@ -2,7 +2,9 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const path = require('path');
 const multer = require('multer');  // To handle file uploads
-const qrcode = require('qrcode');
+const qrcode = require('qrcode'); // QR code module added
+const fs = require('fs'); // To handle file operations
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,30 +13,32 @@ const upload = multer({ dest: 'uploads/' });
 
 // Create a new client for WhatsApp
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth()
 });
 
-// Store sessions and connections
-let connected = false;
-let qrCodeData = '';
-
 // Serve the HTML form at the root endpoint
-app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// QR code generation for first-time login
-client.on('qr', qr => {
-    qrCodeData = qr; // Save QR Data to be sent to frontend
+// Generate QR code dynamically and serve to the user
+client.on('qr', async (qr) => {
+    // Generate QR code and save it as an image file
+    await qrcode.toFile('./qr-code.png', qr, function (err) {
+        if (err) console.error('Error generating QR code:', err);
+        console.log('QR Code saved to qr-code.png');
+    });
     console.log('QR Code generated! Scan it in WhatsApp Web.');
+});
+
+// Serve the generated QR code as an image
+app.get('/qr-code', (req, res) => {
+    res.sendFile(path.join(__dirname, 'qr-code.png'));
 });
 
 // When the client is ready
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
-    connected = true;
-    qrCodeData = ''; // Clear QR once ready
 });
 
 // Route to send messages and files
@@ -42,7 +46,6 @@ app.post('/send', upload.array('files'), async (req, res) => {
     const number = req.body.number;
     const messages = req.body.messages.split('\n'); // Split messages by new line
     const files = req.files;  // Handle uploaded files
-    const speed = parseInt(req.body.speed) || 1000;
 
     if (!number || !messages || messages.length === 0) {
         return res.status(400).send('Both number and messages are required.');
@@ -50,18 +53,10 @@ app.post('/send', upload.array('files'), async (req, res) => {
 
     const chatId = number + "@c.us";
 
-    // Wait for the QR Code to be scanned
-    if (!connected) {
-        return res.status(400).send({ message: 'Please scan the QR code first.' });
-    }
-
     try {
         // Send multiple messages
-        for (let i = 0; i < messages.length; i++) {
-            await client.sendMessage(chatId, messages[i]);
-            if (i < messages.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, speed));
-            }
+        for (let message of messages) {
+            await client.sendMessage(chatId, message);
         }
 
         // Send files if any
@@ -72,19 +67,10 @@ app.post('/send', upload.array('files'), async (req, res) => {
             }
         }
 
-        res.json({ qr: qrCodeData, message: 'Messages and files sent successfully!' });
+        res.send('Messages and files sent successfully!');
     } catch (error) {
         res.status(500).send('Error: ' + error);
     }
-});
-
-// Route to stop sending messages
-app.post('/stop', (req, res) => {
-    if (!connected) {
-        return res.status(400).send('No active session found.');
-    }
-    connected = false; // Stop message sending
-    res.send('Message sending stopped!');
 });
 
 // Initialize the WhatsApp client
