@@ -1,73 +1,41 @@
-
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
-const path = require('path');
-const multer = require('multer');  // To handle file uploads
-const qrcode = require('qrcode-terminal');
-
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode'); // यह QR code इमेज जनरेट करने में मदद करेगा
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Initialize multer for file upload handling
-const upload = multer({ dest: 'uploads/' });
-
-// Create a new client for WhatsApp
+// WhatsApp क्लाइंट इनिशियलाइज करें
 const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-// Serve the HTML form at the root endpoint
+app.use(express.static('public')); // स्टैटिक फाइल्स सर्व करने के लिए (QR Code इमेज डिस्प्ले के लिए)
+
+// HTML पेज सर्व करने का रूट
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(__dirname + '/index.html');
 });
 
-// QR code generation for first-time login
-client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
-    console.log('QR Code generated! Scan it in WhatsApp Web.');
+// QR कोड जनरेट करें और फ्रंटएंड पर भेजें
+client.on('qr', (qr) => {
+    qrcode.toDataURL(qr, (err, url) => {
+        if (err) {
+            console.log("QR जनरेट करते समय त्रुटि:", err);
+        }
+        // QR कोड इमेज URL फ्रंटएंड पर भेजें
+        res.send(`<img src="${url}" alt="Scan this QR Code with WhatsApp">`);
+    });
 });
 
-// When the client is ready
+// जब क्लाइंट तैयार हो जाए
 client.on('ready', () => {
-    console.log('WhatsApp Client is ready!');
+    console.log('WhatsApp क्लाइंट तैयार है!');
 });
 
-// Route to send messages and files
-app.post('/send', upload.array('files'), async (req, res) => {
-    const number = req.body.number;
-    const messages = req.body.messages.split('\n'); // Split messages by new line
-    const files = req.files;  // Handle uploaded files
-
-    if (!number || !messages || messages.length === 0) {
-        return res.status(400).send('Both number and messages are required.');
-    }
-
-    const chatId = number + "@c.us";
-
-    try {
-        // Send multiple messages
-        for (let message of messages) {
-            await client.sendMessage(chatId, message);
-        }
-
-        // Send files if any
-        if (files && files.length > 0) {
-            for (let file of files) {
-                const media = MessageMedia.fromFilePath(file.path);
-                await client.sendMessage(chatId, media);
-            }
-        }
-
-        res.send('Messages and files sent successfully!');
-    } catch (error) {
-        res.status(500).send('Error: ' + error);
-    }
-});
-
-// Initialize the WhatsApp client
+// WhatsApp क्लाइंट इनिशियलाइज करें
 client.initialize();
 
-// Start the Express server
+// Express सर्वर शुरू करें
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`सर्वर पोर्ट ${PORT} पर चल रहा है`);
 });
