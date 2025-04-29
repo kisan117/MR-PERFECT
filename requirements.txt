@@ -1,2 +1,0 @@
-pywhatkit
-flask
