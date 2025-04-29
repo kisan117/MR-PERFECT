@@ -2,7 +2,7 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const path = require('path');
 const multer = require('multer');  // To handle file uploads
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -26,8 +26,7 @@ app.get('/', (req, res) => {
 
 // QR code generation for first-time login
 client.on('qr', qr => {
-    qrCodeData = qr;
-    qrcode.generate(qr, { small: true });
+    qrCodeData = qr; // Save QR Data to be sent to frontend
     console.log('QR Code generated! Scan it in WhatsApp Web.');
 });
 
