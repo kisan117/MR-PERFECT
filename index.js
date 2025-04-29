@@ -2,38 +2,67 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const path = require('path');
 const multer = require('multer');  // To handle file uploads
-const qrcode = require('qrcode'); // QR code module added
-const fs = require('fs'); // To handle file operations
+const qrcode = require('qrcode-terminal');
+const http = require('http');
+const socketIo = require('socket.io');
+const twilio = require('twilio');  // To send SMS for pairing code
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 
-// Initialize multer for file upload handling
-const upload = multer({ dest: 'uploads/' });
+const accountSid = 'your_twilio_account_sid';  // Twilio SID
+const authToken = 'your_twilio_auth_token';    // Twilio Auth Token
+const clientTwilio = new twilio(accountSid, authToken);
 
-// Create a new client for WhatsApp
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Serve the HTML form at the root endpoint
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Generate QR code dynamically and serve to the user
-client.on('qr', async (qr) => {
-    // Generate QR code and save it as an image file
-    await qrcode.toFile('./qr-code.png', qr, function (err) {
-        if (err) console.error('Error generating QR code:', err);
-        console.log('QR Code saved to qr-code.png');
-    });
-    console.log('QR Code generated! Scan it in WhatsApp Web.');
+// Route to handle pairing
+app.post('/pair', async (req, res) => {
+    const ownNumber = req.body.ownNumber;
+    const targetNumber = req.body.targetNumber;
+
+    // Ensure both numbers are provided
+    if (!ownNumber || !targetNumber) {
+        return res.status(400).send('Both numbers are required.');
+    }
+
+    // Generate a pairing code
+    const pairingCode = Math.floor(1000 + Math.random() * 9000);  // 4-digit code
+
+    // Send the pairing code to the user's phone via SMS using Twilio
+    try {
+        await clientTwilio.messages.create({
+            body: `Your pairing code is: ${pairingCode}`,
+            from: 'your_twilio_phone_number',  // Twilio number
+            to: ownNumber
+        });
+
+        console.log(`Pairing code sent to ${ownNumber}: ${pairingCode}`);
+        res.send(`<h3>Pairing code sent to ${ownNumber}. Your code: ${pairingCode}</h3>`);
+    } catch (error) {
+        console.error('Error sending pairing code:', error);
+        res.status(500).send('Error sending pairing code');
+    }
 });
 
-// Serve the generated QR code as an image
-app.get('/qr-code', (req, res) => {
-    res.sendFile(path.join(__dirname, 'qr-code.png'));
+// WhatsApp client setup
+const client = new Client({
+    authStrategy: new LocalAuth()
+});
+
+// QR code generation for first-time login
+client.on('qr', qr => {
+    qrcode.generate(qr, { small: true });
+    io.emit('qr', qr);  // Emit QR code to client (frontend)
+    console.log('QR Code generated! Scan it in WhatsApp Web.');
 });
 
 // When the client is ready
@@ -41,42 +70,10 @@ client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
 });
 
-// Route to send messages and files
-app.post('/send', upload.array('files'), async (req, res) => {
-    const number = req.body.number;
-    const messages = req.body.messages.split('\n'); // Split messages by new line
-    const files = req.files;  // Handle uploaded files
-
-    if (!number || !messages || messages.length === 0) {
-        return res.status(400).send('Both number and messages are required.');
-    }
-
-    const chatId = number + "@c.us";
-
-    try {
-        // Send multiple messages
-        for (let message of messages) {
-            await client.sendMessage(chatId, message);
-        }
-
-        // Send files if any
-        if (files && files.length > 0) {
-            for (let file of files) {
-                const media = MessageMedia.fromFilePath(file.path);
-                await client.sendMessage(chatId, media);
-            }
-        }
-
-        res.send('Messages and files sent successfully!');
-    } catch (error) {
-        res.status(500).send('Error: ' + error);
-    }
-});
-
 // Initialize the WhatsApp client
 client.initialize();
 
 // Start the Express server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
