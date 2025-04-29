@@ -155,7 +155,7 @@
       loader.style.display = 'none';
 
       if (data.qr) {
-        document.getElementById('qr').innerHTML = `<img src="${data.qr}" alt="QR Code" />`;
+        document.getElementById('qr').innerHTML = `<img src="data:image/png;base64,${data.qr}" alt="QR Code" />`;
         statusText.innerText = 'Please scan QR Code with WhatsApp';
       } else if (data.message) {
         alert(data.message);
