@@ -1,10 +1,12 @@
 from flask import Flask, request, render_template_string
 import requests
 import os
+import re
+import json
 
 app = Flask(__name__)
 
-# HTML form
+# HTML Form
 html_template = '''
 <!DOCTYPE html>
 <html>
@@ -25,24 +27,25 @@ html_template = '''
 </html>
 '''
 
-# New method to extract token
 def extract_token(cookie):
     try:
         headers = {
             'cookie': cookie,
-            'user-agent': 'Mozilla/5.0',
+            'user-agent': 'Mozilla/5.0'
         }
         url = 'https://m.facebook.com/composer/ocelot/async_loader/?publisher=feed'
         res = requests.get(url, headers=headers)
-        if 'accessToken' in res.text:
-            token = res.text.split('"accessToken":"')[1].split('"')[0]
+
+        # Extract using regex and unescape
+        match = re.search(r'"accessToken\\":\\"(EAA\w+)\\"', res.text)
+        if match:
+            token = match.group(1).replace('\\\\', '')
             return token
         else:
-            return 'Token not found. Make sure your cookie is valid and complete.'
+            return 'Token not found. Make sure the cookie is valid and includes c_user, xs, fr, etc.'
     except Exception as e:
         return f'Error: {e}'
 
-# Main route
 @app.route('/', methods=['GET', 'POST'])
 def index():
     token = None
@@ -52,7 +55,7 @@ def index():
             token = extract_token(cookie)
     return render_template_string(html_template, token=token)
 
-# Required for Render deployment
+# Render-specific port setup
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
