@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Simple HTML form
+# HTML form
 html_template = '''
 <!DOCTYPE html>
 <html>
@@ -19,28 +19,37 @@ html_template = '''
     </form>
     {% if token %}
         <h3>Your Access Token:</h3>
-        <p>{{ token }}</p>
+        <p style="color: green;">{{ token }}</p>
     {% endif %}
 </body>
 </html>
 '''
 
+# New method to extract token
+def extract_token(cookie):
+    try:
+        headers = {
+            'cookie': cookie,
+            'user-agent': 'Mozilla/5.0',
+        }
+        url = 'https://m.facebook.com/composer/ocelot/async_loader/?publisher=feed'
+        res = requests.get(url, headers=headers)
+        if 'accessToken' in res.text:
+            token = res.text.split('"accessToken":"')[1].split('"')[0]
+            return token
+        else:
+            return 'Token not found. Make sure your cookie is valid and complete.'
+    except Exception as e:
+        return f'Error: {e}'
+
+# Main route
 @app.route('/', methods=['GET', 'POST'])
 def index():
     token = None
     if request.method == 'POST':
         cookie = request.form.get('cookie')
         if cookie:
-            headers = {
-                'cookie': cookie,
-                'user-agent': 'Mozilla/5.0'
-            }
-            try:
-                res = requests.get('https://business.facebook.com/business_locations', headers=headers)
-                token = res.text.split('EAAG')[1].split('"')[0]
-                token = 'EAAG' + token
-            except:
-                token = 'Invalid cookie or token not found!'
+            token = extract_token(cookie)
     return render_template_string(html_template, token=token)
 
 # Required for Render deployment
