@@ -43,13 +43,16 @@ def extract_token(cookie):
         }
         url = 'https://m.facebook.com/composer/ocelot/async_loader/?publisher=feed'
         response = requests.get(url, headers=headers)
+        
+        # Debugging: Print the full response text to check what Facebook returns
+        print("Response Text:", response.text)
 
-        # Check session is valid
+        # Check if session is valid or cookie is expired
         if "for (;;);" in response.text or "login" in response.url:
             return 'Session expired or invalid cookie!'
 
-        # Extract token
-        match = re.search(r'"accessToken\\":\\"(EAA\w+)\\"', response.text)
+        # Extract token using regex
+        match = re.search(r'"accessToken":"(EAA\w+)"', response.text)
         if match:
             token = match.group(1)
             return token
@@ -64,6 +67,7 @@ def index():
     token = None
     if request.method == 'POST':
         cookie = request.form.get('cookie')
+        print(f"Received Cookie: {cookie}")  # Debugging: Print the received cookie
         if cookie:
             token = extract_token(cookie)
     return render_template_string(html_template, token=token)
