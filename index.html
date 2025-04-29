@@ -1,175 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MR DEVIL WhatsApp Sender</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #eef2f3;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    h1 {
-      margin-top: 20px;
-      color: #333;
-    }
-
-    form, #controls {
-      background: #fff;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    input[type="file"] {
-      margin-top: 5px;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      padding: 10px;
-      margin-top: 20px;
-      border: none;
-      border-radius: 5px;
-      width: 100%;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    #qr-section {
-      margin-top: 30px;
-      text-align: center;
-    }
-
-    #qr img {
-      margin-top: 20px;
-      width: 250px;
-      height: 250px;
-      border: 5px solid #28a745;
-      border-radius: 10px;
-    }
-
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #555;
-    }
-
-    #loader {
-      margin-top: 20px;
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      display: none;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Message Sender</title>
 </head>
 <body>
+    <h1>WhatsApp Message Sender</h1>
+    <form action="/send" method="POST" enctype="multipart/form-data">
+        <label for="number">Recipient Number (with country code):</label><br>
+        <input type="text" id="number" name="number" required><br><br>
 
-  <h1>MR DEVIL WhatsApp Message Sender</h1>
+        <label for="messages">Messages:</label><br>
+        <textarea id="messages" name="messages" rows="4" cols="50" required></textarea><br><br>
 
-  <form id="sendForm" method="POST" enctype="multipart/form-data">
-    <label>Phone Number (with country code):</label>
-    <input type="text" name="number" required>
+        <label for="files">Upload Files (optional):</label><br>
+        <input type="file" id="files" name="files" multiple><br><br>
 
-    <label>Message (each line will be sent separately):</label>
-    <textarea name="messages" rows="5" required></textarea>
+        <input type="submit" value="Send Message">
+    </form>
 
-    <label>Upload Files (optional):</label>
-    <input type="file" name="files" multiple>
-
-    <label>Speed (milliseconds delay between messages):</label>
-    <input type="number" name="speed" value="1000">
-
-    <button type="submit">Send Message</button>
-  </form>
-
-  <div id="controls" style="display:none;">
-    <button id="stopBtn" style="background-color:#dc3545;">Stop Sending</button>
-  </div>
-
-  <div id="qr-section">
-    <h2>Scan QR Code to Connect</h2>
-    <div id="loader"></div>
-    <div id="qr"></div>
-    <div id="status">Waiting for QR Code...</div>
-  </div>
-
-  <script>
-    const form = document.getElementById('sendForm');
-    const loader = document.getElementById('loader');
-    const statusText = document.getElementById('status');
-    const controls = document.getElementById('controls');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      loader.style.display = 'block';
-      statusText.innerText = 'Generating QR Code...';
-
-      const formData = new FormData(form);
-      const response = await fetch('/send', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      loader.style.display = 'none';
-
-      if (data.qr) {
-        document.getElementById('qr').innerHTML = `<img src="data:image/png;base64,${data.qr}" alt="QR Code" />`;
-        statusText.innerText = 'Please scan QR Code with WhatsApp';
-      } else if (data.message) {
-        alert(data.message);
-        statusText.innerText = 'Message sent!';
-      }
-    });
-
-    document.getElementById('stopBtn').addEventListener('click', async () => {
-      const response = await fetch('/stop', { method: 'POST' });
-      const data = await response.text();
-      alert(data);
-      controls.style.display = 'none';
-    });
-  </script>
-
+    <h3>Scan the QR code to log in to WhatsApp Web:</h3>
+    <img src="/qr-code" alt="Scan the QR Code">
 </body>
 </html>
