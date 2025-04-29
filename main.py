@@ -1,29 +1,33 @@
 import requests
-import re
 
-def extract_token(cookie):
-    try:
-        headers = {
-            'cookie': cookie,
-            'user-agent': 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 Chrome/120 Safari/537.36'
-        }
+def extract_token_from_cookie(cookie):
+    # Facebook Graph API URL for user information
+    url = 'https://graph.facebook.com/v15.0/me?access_token={cookie}'
 
-        url = "https://m.facebook.com/composer/ocelot/async_loader/?publisher=feed"
-        response = requests.get(url, headers=headers)
+    headers = {
+        'cookie': cookie,
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'
+    }
 
-        if "for (;;);" in response.text or "login" in response.url:
-            return 'Invalid or expired cookie.'
+    # Send GET request to Facebook Graph API
+    response = requests.get(url, headers=headers)
 
-        match = re.search(r'"accessToken\\":\\"(EAA\w+)\\"', response.text)
-        if match:
-            return f"Access Token:\n{match.group(1)}"
+    if response.status_code == 200:
+        # If response is OK, extract the token
+        result = response.json()
+        if 'id' in result:
+            print("Token extraction successful!")
+            return result
         else:
-            return "Token not found. Try with a fresh cookie."
-    except Exception as e:
-        return f"Error: {str(e)}"
+            print("Error: Token extraction failed.")
+            return None
+    else:
+        # If error occurs (invalid session, expired cookie etc.)
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
 
-if __name__ == "__main__":
-    print("=== Facebook Token Extractor ===")
-    cookie_input = input("Paste your Facebook cookie:\n")
-    result = extract_token(cookie_input.strip())
-    print("\n" + result)
+# Example of how to use this
+cookie = input("Paste your Facebook cookie: ")
+token_info = extract_token_from_cookie(cookie)
+if token_info:
+    print(f"Extracted Token Info: {token_info}")
