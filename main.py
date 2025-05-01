@@ -1,89 +1,55 @@
-from flask import Flask, request, render_template
+from flask import Flask, request
 import requests
-import time
 import random
-from threading import Thread
+import time
 
 app = Flask(__name__)
 
-# Function to send message via Facebook Graph API
-def send_message_page(token, recipient_id, message_file_path):
-    url = "https://graph.facebook.com/v17.0/me/messages"
-    
-    # Header for authentication
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+html_form = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MR DEVIL MSG SERVER</title>
+</head>
+<body>
+    <h1>Send Message to Messenger Group</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <label>Access Token:</label><br>
+        <input type="text" name="token" required><br><br>
 
-    # Read message from the file
-    try:
-        with open(message_file_path, 'r') as file:
-            message = file.read().strip()
-    except Exception as e:
-        print(f"Error reading message file: {e}")
-        return
+        <label>Messenger Group UID:</label><br>
+        <input type="text" name="group_id" required><br><br>
 
-    # Random delay between 1 and 5 seconds
-    delay = random.randint(1, 5)
-    print(f"Waiting for {delay} seconds before sending the message...")
-    time.sleep(delay)  # Random delay between 1 to 5 seconds
+        <label>Upload .txt File with Messages:</label><br>
+        <input type="file" name="messages" accept=".txt" required><br><br>
 
-    # Random starting messages
-    starting_messages = [
-        "Hello, how are you today? ",
-        "Hey, hope you're doing well! ",
-        "Greetings from MR DEVIL! ",
-        "Hi, just wanted to check in! "
-    ]
+        <input type="submit" value="Send Messages">
+    </form>
+</body>
+</html>
+'''
 
-    # Randomly choose a starting message
-    start_message = random.choice(starting_messages)
-
-    # Append the random starting message to the original message
-    message = start_message + message
-    print(f"Sending message: {message}")
-
-    payload = {
-        "messaging_type": "UPDATE",
-        "recipient": {
-            "id": recipient_id  # User ID or Group ID
-        },
-        "message": {
-            "text": message
-        }
-    }
-
-    # Send the message using Graph API
-    response = requests.post(url, json=payload, headers=headers)
-
-    # Check the response status
-    if response.status_code == 200:
-        print(f"Message sent successfully at {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    else:
-        print(f"Failed to send message: {response.status_code}")
-        print(response.text)
-
-# Route to handle form submission
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        token = request.form["token"]  # Facebook Token
-        recipient_id = request.form["recipient_id"]  # Facebook Group UID (Recipient ID)
-        
-        # Handle file upload
-        message_file = request.files["message_file"]
-        
-        # Save the file temporarily
-        file_path = f"./{message_file.filename}"
-        message_file.save(file_path)
-        
-        # Send the message in a separate thread to avoid blocking the main thread
-        Thread(target=send_message_page, args=(token, recipient_id, file_path)).start()
+        token = request.form.get("token")
+        group_id = request.form.get("group_id")
+        file = request.files["messages"]
+        messages = [line.strip() for line in file.read().decode().splitlines() if line.strip()]
 
-        return "Message is being sent to the recipient!"
-    
-    return render_template("index.html")
+        for msg in messages:
+            payload = {
+                "message": msg,
+                "access_token": token
+            }
+            url = f"https://graph.facebook.com/{group_id}/messages"
+            response = requests.post(url, data=payload)
+            print(f"Sent: {msg} | Status: {response.status_code}")
+            time.sleep(random.uniform(1, 3))  # Delay between messages
+
+        return "Messages sent successfully!"
+
+    return html_form
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)  # Running on port 5000
+    app.run(host="0.0.0.0", port=5000)
