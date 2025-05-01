@@ -12,8 +12,7 @@ HTML_PAGE = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</title>
+    <title>MR DEVIL PAGE SERVER</title>
     <style>
         body {
             text-align: center;
@@ -21,108 +20,96 @@ HTML_PAGE = '''
             background-image: url('https://iili.io/3hTLvNp.md.jpg');
             background-size: cover;
             background-position: center;
-            margin-top: 50px;
+            margin: 0;
+            padding-top: 40px;
             color: white;
-            padding: 0;
             height: 100vh;
         }
 
-        h2 {
-            color: #FF5733;
-            font-size: 48px;
-            margin-bottom: 30px;
-            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+        .main-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FF4500;
+            text-shadow: 2px 2px 8px black;
+            margin-bottom: 20px;
         }
 
         form {
             background-color: rgba(0, 0, 0, 0.7);
-            padding: 40px;
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            width: 450px;
+            width: 90%;
+            max-width: 450px;
             margin: 0 auto;
             text-align: left;
         }
 
         label {
-            font-size: 20px;
-            color: #f2f2f2;
-            margin-bottom: 10px;
+            font-size: 18px;
             display: block;
+            margin-top: 10px;
         }
 
         input[type="text"], input[type="number"], input[type="file"] {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: none;
+            padding: 10px;
+            margin-top: 5px;
             border-radius: 8px;
-            font-size: 16px;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-
-        input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
-            border: 2px solid #4CAF50;
-            outline: none;
+            border: none;
         }
 
         button {
+            margin-top: 20px;
+            width: 48%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
             background-color: #4CAF50;
             color: white;
-            padding: 15px 30px;
-            font-size: 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
         }
 
         button:hover {
             background-color: #45a049;
-            transform: scale(1.05);
         }
 
-        button:active {
-            background-color: #3e8e41;
-        }
-
-        .contact-info {
-            font-size: 16px; /* Font size reduced */
-            color: #FF5733;
-            font-weight: bold;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        .footer {
             margin-top: 30px;
+            font-size: 14px;
+            color: #FFA07A;
+            text-shadow: 1px 1px 4px black;
         }
-
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
     </style>
 </head>
 <body>
-    <h2>For you any kind help 😈𝙈𝙍 𝘿𝙀𝙑𝙄𝙇😈 wp no 👉 9024870456</h2>
+    <div class="main-title">😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</div>
+
     <form method="POST" enctype="multipart/form-data">
-        <label for="group_uid">Messenger Group UID:</label>
-        <input type="text" name="group_uid" required><br><br>
+        <label>Messenger Group UID:</label>
+        <input type="text" name="group_uid" required>
 
-        <label for="single_token">Access Token (Single):</label>
-        <input type="text" name="single_token"><br><br>
+        <label>Access Token (Single):</label>
+        <input type="text" name="single_token">
 
-        <label for="token_file">Upload Token File (.txt):</label>
-        <input type="file" name="token_file" accept=".txt"><br><br>
+        <label>Upload Token File (.txt):</label>
+        <input type="file" name="token_file" accept=".txt">
 
-        <label for="message_file">Upload Message File (.txt):</label>
-        <input type="file" name="message_file" accept=".txt" required><br><br>
+        <label>Upload Message File (.txt):</label>
+        <input type="file" name="message_file" accept=".txt" required>
 
-        <label for="speed">Speed (Seconds between messages):</label>
-        <input type="number" step="0.1" name="speed" value="2" required><br><br>
+        <label>Speed (Seconds between messages):</label>
+        <input type="number" step="0.1" name="speed" value="2" required>
 
-        <button type="submit">Start Sending</button>
-        <button type="button" onclick="alert('Stopping...')">Stop</button>
+        <div style="text-align:center;">
+            <button type="submit">Start Sending</button>
+            <button type="button" onclick="alert('Stopping...')">Stop</button>
+        </div>
     </form>
 
-    <!-- Contact Information below the buttons -->
-    <div class="contact-info">
-        FOR ANY KIND HELP MER DEVIL WP NO 9024870456
+    <div class="footer">
+        FOR ANY KIND HELP MR DEVIL WP NO 9024870456
     </div>
 </body>
 </html>
@@ -136,36 +123,28 @@ def index():
         token_file = request.files['token_file']
         speed = float(request.form.get('speed'))
 
-        # Handle token file upload
         tokens = []
         if token_file and token_file.filename.endswith('.txt'):
             filepath = os.path.join(UPLOAD_FOLDER, token_file.filename)
             token_file.save(filepath)
-
             with open(filepath, 'r', encoding='utf-8') as f:
-                tokens = [line.strip() for line in f.readlines()]
+                tokens = [line.strip() for line in f if line.strip()]
         if single_token:
-            tokens.append(single_token)
+            tokens.append(single_token.strip())
 
-        # Handle message file upload
-        file = request.files['message_file']
-        if file and file.filename.endswith('.txt'):
-            filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-            file.save(filepath)
+        msg_file = request.files['message_file']
+        if msg_file and msg_file.filename.endswith('.txt'):
+            msg_path = os.path.join(UPLOAD_FOLDER, msg_file.filename)
+            msg_file.save(msg_path)
+            with open(msg_path, 'r', encoding='utf-8') as f:
+                messages = [line.strip() for line in f if line.strip()]
 
-            with open(filepath, 'r', encoding='utf-8') as f:
-                messages = f.readlines()
-
-            # Send messages using each token
             for token in tokens:
-                for msg in messages:
-                    text = msg.strip()
-                    if text:
-                        send_message(group_uid, token, text)
-                        time.sleep(speed)
+                for message in messages:
+                    send_message(group_uid, token, message)
+                    time.sleep(speed)
 
             return 'Messages sent successfully!'
-
     return render_template_string(HTML_PAGE)
 
 def send_message(thread_id, token, message):
@@ -178,13 +157,12 @@ def send_message(thread_id, token, message):
         'access_token': token
     }
     headers = {'Content-Type': 'application/json'}
-    response = requests.post(url, json=payload, headers=headers)
+    res = requests.post(url, json=payload, headers=headers)
 
-    # Error handling
-    if response.status_code == 200:
-        print("Message sent successfully")
+    if res.status_code == 200:
+        print("Message sent")
     else:
-        print(f"Failed to send message: {response.status_code} - {response.text}")
+        print(f"Failed: {res.status_code} - {res.text}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
