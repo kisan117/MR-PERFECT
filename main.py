@@ -9,23 +9,100 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 HTML_PAGE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MR DEVIL POST SERVER</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://iili.io/3hTLvNp.md.jpg'); /* 4K Image URL */
+            background-size: cover;
+            background-position: center;
+            margin-top: 50px;
+            color: white;
+            padding: 0;
+            height: 100vh;
+        }
+
+        h2 {
+            color: #FF5733;
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        form {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 450px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        label {
+            font-size: 20px;
+            color: #f2f2f2;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
+            border: 2px solid #4CAF50;
+            outline: none;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #3e8e41;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    </style>
 </head>
-<body style="text-align:center; font-family:sans-serif;">
-    <h2>MR DEVIL MESSENGER POST SERVER</h2>
+<body>
+    <h2>For you any kind help 😈𝙈𝙍 𝘿𝙀𝙑𝙄𝙇😈 wp no 👉 9024870456</h2>
     <form method="POST" enctype="multipart/form-data">
-        <label>Messenger Group UID:</label><br>
+        <label for="group_uid">Messenger Group UID:</label>
         <input type="text" name="group_uid" required><br><br>
 
-        <label>Access Token:</label><br>
+        <label for="token">Access Token:</label>
         <input type="text" name="token" required><br><br>
 
-        <label>Upload Message File (.txt):</label><br>
+        <label for="message_file">Upload Message File (.txt):</label>
         <input type="file" name="message_file" accept=".txt" required><br><br>
 
-        <label>Speed (Seconds between messages):</label><br>
+        <label for="speed">Speed (Seconds between messages):</label>
         <input type="number" step="0.1" name="speed" value="2" required><br><br>
 
         <button type="submit">Start Sending</button>
@@ -60,7 +137,7 @@ def index():
     return render_template_string(HTML_PAGE)
 
 def send_message(thread_id, token, message):
-    url = 'https://graph.facebook.com/v19.0/me/messages'
+    url = f'https://graph.facebook.com/v19.0/{thread_id}/messages'
     payload = {
         'messaging_type': 'MESSAGE_TAG',
         'recipient': {'thread_key': thread_id},
@@ -70,7 +147,12 @@ def send_message(thread_id, token, message):
     }
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
-    print(response.text)
+
+    # Error handling
+    if response.status_code == 200:
+        print("Message sent successfully")
+    else:
+        print(f"Failed to send message: {response.status_code} - {response.text}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
