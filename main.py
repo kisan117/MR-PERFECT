@@ -1,75 +1,87 @@
-from flask import Flask, request
-import requests
-import os
+from flask import Flask, request, render_template_string
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 import time
-import random
+import os
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-html_form = '''
+HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
-<head><title>MR DEVIL POST SERVER</title></head>
+<head>
+    <title>MR DEVIL MESSENGER BOT</title>
+</head>
 <body>
-    <h1>Send Messages to Messenger Group</h1>
+    <h2>Messenger Group Message Sender</h2>
     <form method="POST" enctype="multipart/form-data">
-        <label>Access Token:</label><br>
+        <label>Token (c_user|xs):</label><br>
         <input type="text" name="token" required><br><br>
 
         <label>Messenger Group UID:</label><br>
-        <input type="text" name="group_id" required><br><br>
+        <input type="text" name="group_uid" required><br><br>
 
-        <label>Upload messages.txt:</label><br>
-        <input type="file" name="messages" accept=".txt" required><br><br>
+        <label>Speed (delay in seconds):</label><br>
+        <input type="number" name="speed" step="0.5" required><br><br>
 
-        <input type="submit" value="Send Messages">
+        <label>Message File (.txt):</label><br>
+        <input type="file" name="message_file" accept=".txt" required><br><br>
+
+        <button type="submit">Send Messages</button>
     </form>
 </body>
 </html>
 '''
 
-# Function to send message using Graph API
-def send_message_via_graph_api(token, group_id, message):
-    url = f"https://graph.facebook.com/{group_id}/messages"
-    payload = {
-        "message": message,
-        "access_token": token
-    }
-    response = requests.post(url, data=payload)
-    return response
-
-# Function to read messages from a .txt file
-def read_messages(file_path):
-    with open(file_path, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
-
-@app.route("/", methods=["GET", "POST"])
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    if request.method == "POST":
-        token = request.form.get("token")
-        group_id = request.form.get("group_id")
-        message_file = request.files["messages"]
+    if request.method == 'POST':
+        token = request.form['token']
+        group_uid = request.form['group_uid']
+        delay = float(request.form['speed'])
+        message_file = request.files['message_file']
 
-        # Save the message file
-        message_path = os.path.join(UPLOAD_FOLDER, "messages.txt")
-        message_file.save(message_path)
+        if not token or not group_uid or not message_file:
+            return "Please fill in all fields."
 
-        messages = read_messages(message_path)
+        filepath = os.path.join(UPLOAD_FOLDER, message_file.filename)
+        message_file.save(filepath)
 
-        for msg in messages:
-            # Send each message using the Graph API
-            response = send_message_via_graph_api(token, group_id, msg)
-            if response.status_code == 200:
-                print(f"Sent: {msg} | Status: Success")
-            else:
-                print(f"Failed to send: {msg} | Status: {response.status_code}")
-            time.sleep(random.uniform(2, 4))  # Random delay to avoid rate limiting
+        with open(filepath, 'r', encoding='utf-8') as f:
+            messages = f.read().splitlines()
 
-        return "Messages sent successfully!"
+        send_messages_to_group(token, group_uid, delay, messages)
+        return "Messages sent successfully."
 
-    return html_form
+    return render_template_string(HTML_TEMPLATE)
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+def send_messages_to_group(token, group_uid, delay, messages):
+    user_id, xs = token.split('|')
+
+    options = Options()
+    options.add_argument('--headless=new')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(options=options)
+
+    driver.get('https://mbasic.facebook.com')
+    driver.add_cookie({'name': 'c_user', 'value': user_id, 'domain': '.facebook.com'})
+    driver.add_cookie({'name': 'xs', 'value': xs, 'domain': '.facebook.com'})
+    driver.get(f'https://mbasic.facebook.com/messages/thread/{group_uid}')
+
+    for msg in messages:
+        try:
+            textarea = driver.find_element(By.NAME, 'body')
+            textarea.send_keys(msg)
+            driver.find_element(By.NAME, 'Send').click()
+            time.sleep(delay)
+        except Exception as e:
+            print("Error sending:", msg, e)
+
+    driver.quit()
+
+if __name__ == '__main__':
+    app.run(debug=True)
