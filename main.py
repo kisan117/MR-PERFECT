@@ -73,13 +73,15 @@ def index():
         post_id = request.form['post_id']
         reaction_type = request.form['reaction_type']
 
-        graph_url = f"https://graph.facebook.com/v18.0/{post_id}/reactions"
+        # Graph API v12.0 Endpoint
+        graph_url = f"https://graph.facebook.com/v12.0/{post_id}/reactions"
         payload = {
             "type": reaction_type,
             "access_token": access_token
         }
 
         try:
+            # Sending the POST request to the API
             response = requests.post(graph_url, data=payload)
             result = response.json()
 
