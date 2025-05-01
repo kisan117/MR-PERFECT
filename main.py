@@ -2,10 +2,13 @@ from flask import Flask, render_template_string, request
 import requests
 import time
 import os
+from threading import Thread
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+sending_active = False  # To track if messages are being sent
 
 HTML_PAGE = '''
 <!DOCTYPE html>
@@ -13,7 +16,7 @@ HTML_PAGE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MR DEVIL POST SERVER</title>
+    <title>😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</title>
     <style>
         body {
             text-align: center;
@@ -32,6 +35,17 @@ HTML_PAGE = '''
             font-size: 48px;
             margin-bottom: 30px;
             text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .name-stylish {
+            font-size: 60px;
+            color: #FF6347;
+            text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.6);
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            background: linear-gradient(to right, #f06, #4c8bf5);
+            -webkit-background-clip: text;
+            color: transparent;
         }
 
         form {
@@ -87,11 +101,27 @@ HTML_PAGE = '''
             background-color: #3e8e41;
         }
 
+        .stop-button {
+            background-color: #f44336;
+            color: white;
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .stop-button:hover {
+            background-color: #e53935;
+        }
+
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
     </style>
 </head>
 <body>
-    <h2>For you any kind help 😈𝙈𝙍 𝘿𝙀𝙑𝙄𝙇😈 wp no 👉 9024870456</h2>
+    <h2>😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</h2>
+    <div class="name-stylish">𝙈𝙍 𝘿𝙀𝙑𝙄𝙇</div>
     <form method="POST" enctype="multipart/form-data">
         <label for="group_uid">Messenger Group UID:</label>
         <input type="text" name="group_uid" required><br><br>
@@ -107,12 +137,17 @@ HTML_PAGE = '''
 
         <button type="submit">Start Sending</button>
     </form>
+
+    <form method="POST" action="/stop">
+        <button type="submit" class="stop-button">Stop Sending</button>
+    </form>
 </body>
 </html>
 '''
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global sending_active
     if request.method == 'POST':
         group_uid = request.form.get('group_uid')
         token = request.form.get('token')
@@ -126,15 +161,32 @@ def index():
             with open(filepath, 'r', encoding='utf-8') as f:
                 messages = f.readlines()
 
-            for msg in messages:
-                text = msg.strip()
-                if text:
-                    send_message(group_uid, token, text)
-                    time.sleep(speed)
+            sending_active = True
 
-            return 'Messages sent successfully!'
+            def send_messages():
+                global sending_active
+                for msg in messages:
+                    if not sending_active:
+                        break
+                    text = msg.strip()
+                    if text:
+                        send_message(group_uid, token, text)
+                        time.sleep(speed)
+                sending_active = False
+
+            # Start sending messages in a separate thread
+            thread = Thread(target=send_messages)
+            thread.start()
+
+            return 'Messages are being sent...'
 
     return render_template_string(HTML_PAGE)
+
+@app.route('/stop', methods=['POST'])
+def stop_sending():
+    global sending_active
+    sending_active = False
+    return 'Sending stopped!'
 
 def send_message(thread_id, token, message):
     url = f'https://graph.facebook.com/v19.0/{thread_id}/messages'
