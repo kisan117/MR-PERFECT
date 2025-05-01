@@ -12,7 +12,8 @@ HTML_PAGE = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MR DEVIL PAGE SERVER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍</title>
     <style>
         body {
             text-align: center;
@@ -20,55 +21,44 @@ HTML_PAGE = '''
             background-image: url('https://iili.io/3hTLvNp.md.jpg');
             background-size: cover;
             background-position: center;
-            margin: 0;
-            padding-top: 30px;
             color: white;
-            height: 100vh;
+            padding: 20px;
+            margin: 0;
         }
 
         .main-title {
-            font-size: 48px;
+            font-size: 7vw;
             font-weight: bold;
-            color: #FF4500;
-            text-shadow: 3px 3px 10px black;
-            margin-bottom: 20px;
+            margin: 30px 0;
+            text-shadow: 2px 2px 10px black;
+            color: #FF5733;
         }
 
         form {
             background-color: rgba(0, 0, 0, 0.7);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 480px;
+            max-width: 500px;
             margin: 0 auto;
-            text-align: left;
         }
 
-        label {
-            font-size: 18px;
+        label, input, button {
+            font-size: 4vw;
             display: block;
-            margin-top: 10px;
+            width: 100%;
+            margin: 10px 0;
         }
 
-        input[type="text"], input[type="number"], input[type="file"] {
-            width: 100%;
+        input, button {
             padding: 10px;
-            margin-top: 5px;
             border-radius: 8px;
             border: none;
         }
 
         button {
-            margin-top: 20px;
-            width: 48%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
             background-color: #4CAF50;
             color: white;
+            cursor: pointer;
         }
 
         button:hover {
@@ -77,40 +67,43 @@ HTML_PAGE = '''
 
         .footer {
             margin-top: 30px;
-            font-size: 20px;
-            color: #FFA07A;
-            text-shadow: 2px 2px 5px black;
+            font-size: 4vw;
+            color: #f0f0f0;
+        }
+
+        @media (min-width: 600px) {
+            .main-title {
+                font-size: 36px;
+            }
+            label, input, button, .footer {
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="main-title">😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</div>
+    <div class="main-title">𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍</div>
 
     <form method="POST" enctype="multipart/form-data">
-        <label>Messenger Group UID:</label>
+        <label for="group_uid">Messenger Group UID:</label>
         <input type="text" name="group_uid" required>
 
-        <label>Access Token (Single):</label>
-        <input type="text" name="single_token">
+        <label for="token">Single Token:</label>
+        <input type="text" name="token">
 
-        <label>Upload Token File (.txt):</label>
+        <label for="token_file">Upload Token File (.txt):</label>
         <input type="file" name="token_file" accept=".txt">
 
-        <label>Upload Message File (.txt):</label>
+        <label for="message_file">Upload Message File (.txt):</label>
         <input type="file" name="message_file" accept=".txt" required>
 
-        <label>Speed (Seconds between messages):</label>
+        <label for="speed">Speed (Seconds between messages):</label>
         <input type="number" step="0.1" name="speed" value="2" required>
 
-        <div style="text-align:center;">
-            <button type="submit">Start Sending</button>
-            <button type="button" onclick="alert('Stopping...')">Stop</button>
-        </div>
+        <button type="submit">Start Sending</button>
     </form>
 
-    <div class="footer">
-        FOR ANY KIND HELP MR DEVIL WP NO 9024870456
-    </div>
+    <div class="footer">FOR ANY KIND HELP MR DEVIL WP NO 9024870456</div>
 </body>
 </html>
 '''
@@ -119,29 +112,30 @@ HTML_PAGE = '''
 def index():
     if request.method == 'POST':
         group_uid = request.form.get('group_uid')
-        single_token = request.form.get('single_token')
-        token_file = request.files['token_file']
         speed = float(request.form.get('speed'))
+        message_file = request.files['message_file']
+        token = request.form.get('token')
+        token_file = request.files.get('token_file')
 
-        tokens = []
-        if token_file and token_file.filename.endswith('.txt'):
-            filepath = os.path.join(UPLOAD_FOLDER, token_file.filename)
-            token_file.save(filepath)
-            with open(filepath, 'r', encoding='utf-8') as f:
-                tokens = [line.strip() for line in f if line.strip()]
-        if single_token:
-            tokens.append(single_token.strip())
+        if message_file and message_file.filename.endswith('.txt'):
+            message_path = os.path.join(UPLOAD_FOLDER, message_file.filename)
+            message_file.save(message_path)
 
-        msg_file = request.files['message_file']
-        if msg_file and msg_file.filename.endswith('.txt'):
-            msg_path = os.path.join(UPLOAD_FOLDER, msg_file.filename)
-            msg_file.save(msg_path)
-            with open(msg_path, 'r', encoding='utf-8') as f:
+            with open(message_path, 'r', encoding='utf-8') as f:
                 messages = [line.strip() for line in f if line.strip()]
 
-            for token in tokens:
-                for message in messages:
-                    send_message(group_uid, token, message)
+            tokens = []
+            if token:
+                tokens.append(token)
+            elif token_file and token_file.filename.endswith('.txt'):
+                token_path = os.path.join(UPLOAD_FOLDER, token_file.filename)
+                token_file.save(token_path)
+                with open(token_path, 'r', encoding='utf-8') as tf:
+                    tokens = [line.strip() for line in tf if line.strip()]
+
+            for msg in messages:
+                for tk in tokens:
+                    send_message(group_uid, tk, msg)
                     time.sleep(speed)
 
             return 'Messages sent successfully!'
@@ -157,12 +151,12 @@ def send_message(thread_id, token, message):
         'access_token': token
     }
     headers = {'Content-Type': 'application/json'}
-    res = requests.post(url, json=payload, headers=headers)
+    response = requests.post(url, json=payload, headers=headers)
 
-    if res.status_code == 200:
-        print("Message sent")
+    if response.status_code == 200:
+        print("Message sent successfully")
     else:
-        print(f"Failed: {res.status_code} - {res.text}")
+        print(f"Failed to send message: {response.status_code} - {response.text}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
