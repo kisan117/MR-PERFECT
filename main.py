@@ -1,7 +1,4 @@
-from flask import Flask, request, render_template_string
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+from flask import Flask, render_template_string, request
 import requests
 import time
 import os
@@ -10,141 +7,70 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-HTML_TEMPLATE = '''
+HTML_PAGE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MR DEVIL MESSENGER BOT</title>
-    <style>
-        body {
-            background-color: #111;
-            color: #0f0;
-            font-family: monospace;
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #0ff;
-            text-align: center;
-        }
-        form {
-            max-width: 500px;
-            margin: auto;
-            padding: 20px;
-            background: #222;
-            border: 2px solid #0f0;
-            border-radius: 10px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-            font-size: 18px;
-        }
-        input, button {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            font-size: 16px;
-            background-color: #000;
-            color: #0f0;
-            border: 1px solid #0f0;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0f0;
-            color: #000;
-            cursor: pointer;
-        }
-    </style>
+    <title>MR DEVIL POST SERVER</title>
 </head>
-<body>
-    <h1>MR DEVIL POST SERVER</h1>
-    <h2>Messenger Group Message Sender</h2>
+<body style="text-align:center; font-family:sans-serif;">
+    <h2>MR DEVIL MESSENGER POST SERVER</h2>
     <form method="POST" enctype="multipart/form-data">
-        <label>Token (c_user|xs):</label>
-        <input type="text" name="token" required>
+        <label>Messenger Group UID:</label><br>
+        <input type="text" name="group_uid" required><br><br>
 
-        <label>Messenger Group UID:</label>
-        <input type="text" name="group_uid" required>
+        <label>Access Token:</label><br>
+        <input type="text" name="token" required><br><br>
 
-        <label>Speed (delay in seconds):</label>
-        <input type="number" name="speed" step="0.5" required>
+        <label>Upload Message File (.txt):</label><br>
+        <input type="file" name="message_file" accept=".txt" required><br><br>
 
-        <label>Message File (.txt):</label>
-        <input type="file" name="message_file" accept=".txt" required>
+        <label>Speed (Seconds between messages):</label><br>
+        <input type="number" step="0.1" name="speed" value="2" required><br><br>
 
-        <button type="submit">Send Messages</button>
+        <button type="submit">Start Sending</button>
     </form>
 </body>
 </html>
 '''
 
 @app.route('/', methods=['GET', 'POST'])
-def home():
+def index():
     if request.method == 'POST':
-        token = request.form['token']
-        group_uid = request.form['group_uid']
-        delay = float(request.form['speed'])
-        message_file = request.files['message_file']
+        group_uid = request.form.get('group_uid')
+        token = request.form.get('token')
+        speed = float(request.form.get('speed'))
 
-        if not token or not group_uid or not message_file:
-            return "Please fill in all fields."
+        file = request.files['message_file']
+        if file and file.filename.endswith('.txt'):
+            filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(filepath)
 
-        # Token Split and Graph API Check
-        if '|' not in token:
-            return "Invalid token format. Use c_user|xs."
+            with open(filepath, 'r', encoding='utf-8') as f:
+                messages = f.readlines()
 
-        user_id, xs = token.split('|')
+            for msg in messages:
+                text = msg.strip()
+                if text:
+                    send_message(group_uid, token, text)
+                    time.sleep(speed)
 
-        if not verify_token_graph_api(user_id):
-            return "Invalid or expired Facebook token."
+            return 'Messages sent successfully!'
 
-        filepath = os.path.join(UPLOAD_FOLDER, message_file.filename)
-        message_file.save(filepath)
+    return render_template_string(HTML_PAGE)
 
-        with open(filepath, 'r', encoding='utf-8') as f:
-            messages = f.read().splitlines()
-
-        send_messages_to_group(user_id, xs, group_uid, delay, messages)
-        return "Messages sent successfully."
-
-    return render_template_string(HTML_TEMPLATE)
-
-def verify_token_graph_api(user_id):
-    try:
-        url = f"https://graph.facebook.com/{user_id}"
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json"
-        }
-        response = requests.get(url, headers=headers)
-        return response.status_code == 200
-    except Exception as e:
-        print("Graph API error:", e)
-        return False
-
-def send_messages_to_group(user_id, xs, group_uid, delay, messages):
-    options = Options()
-    options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(options=options)
-
-    driver.get('https://mbasic.facebook.com')
-    driver.add_cookie({'name': 'c_user', 'value': user_id, 'domain': '.facebook.com'})
-    driver.add_cookie({'name': 'xs', 'value': xs, 'domain': '.facebook.com'})
-    driver.get(f'https://mbasic.facebook.com/messages/thread/{group_uid}')
-
-    for msg in messages:
-        try:
-            textarea = driver.find_element(By.NAME, 'body')
-            textarea.send_keys(msg)
-            driver.find_element(By.NAME, 'Send').click()
-            time.sleep(delay)
-        except Exception as e:
-            print("Error sending:", msg, e)
-
-    driver.quit()
+def send_message(thread_id, token, message):
+    url = 'https://graph.facebook.com/v19.0/me/messages'
+    payload = {
+        'messaging_type': 'MESSAGE_TAG',
+        'recipient': {'thread_key': thread_id},
+        'message': {'text': message},
+        'tag': 'ACCOUNT_UPDATE',
+        'access_token': token
+    }
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(url, json=payload, headers=headers)
+    print(response.text)
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=5000)
