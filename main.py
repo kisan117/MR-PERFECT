@@ -12,7 +12,7 @@ HTML_PAGE = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>😈 MR DEVIL POST SERVER 👿</title>
+    <title>🦋 𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗢𝗡 𝗙𝗜𝗥𝗘🦋</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap');
@@ -24,6 +24,7 @@ HTML_PAGE = '''
             margin: 0;
             padding: 0;
             color: white;
+            font-size: 16px;
         }
 
         h2 {
@@ -31,21 +32,22 @@ HTML_PAGE = '''
             color: #ff4d4d;
             margin-top: 30px;
             text-align: center;
+            font-size: 24px;
         }
 
         form {
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.7);
             padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            margin: 30px auto;
-            box-shadow: 0 0 20px #ff4d4d;
+            border-radius: 12px;
+            max-width: 480px;
+            margin: 20px auto;
+            box-shadow: 0 0 12px #ff4d4d;
         }
 
         label {
             display: block;
-            margin-top: 15px;
-            text-align: left;
+            margin-top: 14px;
+            font-size: 14px;
         }
 
         input[type="text"],
@@ -53,53 +55,76 @@ HTML_PAGE = '''
         input[type="file"] {
             width: 100%;
             padding: 10px;
-            margin-top: 5px;
-            border-radius: 8px;
+            margin-top: 6px;
+            border-radius: 6px;
             border: none;
-            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+        }
+
+        .inline-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .inline-group input[type="text"] {
+            flex: 1;
         }
 
         .speed-control {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
+            gap: 6px;
+        }
+
+        .speed-control input {
+            width: 60px;
+            padding: 6px;
+            font-size: 14px;
+            text-align: center;
         }
 
         .speed-control button {
             background: #e91e63;
             border: none;
             color: white;
-            padding: 10px 14px;
+            padding: 6px 12px;
+            font-size: 14px;
             border-radius: 50%;
-            font-size: 18px;
             cursor: pointer;
         }
 
         button[type="submit"] {
-            margin-top: 30px;
+            margin-top: 20px;
             background-color: #e91e63;
-            padding: 15px;
+            padding: 12px;
             width: 100%;
             border: none;
-            font-size: 18px;
+            font-size: 16px;
             font-family: 'Orbitron', sans-serif;
             border-radius: 8px;
             cursor: pointer;
             color: white;
-            box-shadow: 0 0 10px #ff4d4d;
+            box-shadow: 0 0 8px #ff4d4d;
         }
 
         input[type="radio"] {
             margin-right: 5px;
         }
+
+        .footer {
+            margin-top: 18px;
+            font-size: 12px;
+            text-align: center;
+            color: #ccc;
+        }
+
     </style>
     <script>
         function toggleToken(isSingle) {
-            const singleDiv = document.getElementById('single_token_div');
-            const fileDiv = document.getElementById('file_token_div');
-            singleDiv.style.display = isSingle ? 'block' : 'none';
-            fileDiv.style.display = isSingle ? 'none' : 'block';
+            document.getElementById('single_token_div').style.display = isSingle ? 'block' : 'none';
+            document.getElementById('file_token_div').style.display = isSingle ? 'none' : 'block';
         }
 
         function changeSpeed(val) {
@@ -111,7 +136,7 @@ HTML_PAGE = '''
     </script>
 </head>
 <body>
-    <h2>😈 MR DEVIL POST SERVER 👿</h2>
+    <h2>🦋 𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗢𝗡 𝗙𝗜𝗥𝗘🦋</h2>
     <form method="POST" enctype="multipart/form-data">
         <label>SELECT TOKEN TYPE:</label>
         <input type="radio" name="token_type" value="single" checked onclick="toggleToken(true)"> SINGLE TOKEN
@@ -130,14 +155,15 @@ HTML_PAGE = '''
         <label for="group_uid">TARGET UID:</label>
         <input type="text" name="group_uid" required>
 
-        <label for="target_name">HATERS NAME:</label>
-        <input type="text" name="target_name">
-
-        <!-- Speed control moved here -->
-        <div class="speed-control">
-            <button type="button" onclick="changeSpeed(-0.5)">-</button>
-            <input type="number" step="0.1" min="0.1" name="speed" id="speed" value="2" required>
-            <button type="button" onclick="changeSpeed(0.5)">+</button>
+        <!-- Haters Name + Speed Together -->
+        <label>HATERS NAME & SPEED:</label>
+        <div class="inline-group">
+            <input type="text" name="target_name" placeholder="Name">
+            <div class="speed-control">
+                <button type="button" onclick="changeSpeed(-0.5)">-</button>
+                <input type="number" step="0.1" min="0.1" name="speed" id="speed" value="2" required>
+                <button type="button" onclick="changeSpeed(0.5)">+</button>
+            </div>
         </div>
 
         <label for="message_file">UPLOAD MESSAGE FILE (.TXT):</label>
@@ -145,10 +171,9 @@ HTML_PAGE = '''
 
         <button type="submit">START SENDING</button>
 
-        <!-- Contact Info -->
-        <p style="margin-top: 20px; font-size: 14px; color: #ccc;">
+        <div class="footer">
             Created by MR DEVIL | Contact: 9024870456
-        </p>
+        </div>
     </form>
 </body>
 </html>
@@ -201,11 +226,7 @@ def send_message(thread_id, token, message):
     }
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
+    return response.json()
 
-    if response.status_code == 200:
-        print("Message sent successfully")
-    else:
-        print(f"Failed: {response.status_code} - {response.text}")
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
