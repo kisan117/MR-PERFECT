@@ -21,16 +21,16 @@ HTML_PAGE = '''
             background-size: cover;
             background-position: center;
             margin: 0;
-            padding-top: 40px;
+            padding-top: 30px;
             color: white;
             height: 100vh;
         }
 
         .main-title {
-            font-size: 38px;
+            font-size: 48px;
             font-weight: bold;
             color: #FF4500;
-            text-shadow: 2px 2px 8px black;
+            text-shadow: 3px 3px 10px black;
             margin-bottom: 20px;
         }
 
@@ -40,7 +40,7 @@ HTML_PAGE = '''
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             width: 90%;
-            max-width: 450px;
+            max-width: 480px;
             margin: 0 auto;
             text-align: left;
         }
@@ -77,9 +77,9 @@ HTML_PAGE = '''
 
         .footer {
             margin-top: 30px;
-            font-size: 18px;
+            font-size: 20px;
             color: #FFA07A;
-            text-shadow: 1px 1px 4px black;
+            text-shadow: 2px 2px 5px black;
         }
     </style>
 </head>
