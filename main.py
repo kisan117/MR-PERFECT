@@ -27,7 +27,7 @@ HTML_PAGE = '''
         }
 
         .main-title {
-            font-size: 32px;
+            font-size: 38px;
             font-weight: bold;
             color: #FF4500;
             text-shadow: 2px 2px 8px black;
@@ -77,7 +77,7 @@ HTML_PAGE = '''
 
         .footer {
             margin-top: 30px;
-            font-size: 14px;
+            font-size: 18px;
             color: #FFA07A;
             text-shadow: 1px 1px 4px black;
         }
