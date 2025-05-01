@@ -1,100 +1,89 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template
 import requests
-import os
+import time
+import random
+from threading import Thread
 
 app = Flask(__name__)
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Facebook Reaction Tool</title>
-    <style>
-        body {
-            font-family: Arial;
-            text-align: center;
-            background: url('https://i.ibb.co/r2LjfV3x/2d8b98aa48e24c185694c9f04989eed8.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #000;
+# Function to send message via Facebook Graph API
+def send_message_page(token, recipient_id, message_file_path):
+    url = "https://graph.facebook.com/v17.0/me/messages"
+    
+    # Header for authentication
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Read message from the file
+    try:
+        with open(message_file_path, 'r') as file:
+            message = file.read().strip()
+    except Exception as e:
+        print(f"Error reading message file: {e}")
+        return
+
+    # Random delay between 1 and 5 seconds
+    delay = random.randint(1, 5)
+    print(f"Waiting for {delay} seconds before sending the message...")
+    time.sleep(delay)  # Random delay between 1 to 5 seconds
+
+    # Random starting messages
+    starting_messages = [
+        "Hello, how are you today? ",
+        "Hey, hope you're doing well! ",
+        "Greetings from MR DEVIL! ",
+        "Hi, just wanted to check in! "
+    ]
+
+    # Randomly choose a starting message
+    start_message = random.choice(starting_messages)
+
+    # Append the random starting message to the original message
+    message = start_message + message
+    print(f"Sending message: {message}")
+
+    payload = {
+        "messaging_type": "UPDATE",
+        "recipient": {
+            "id": recipient_id  # User ID or Group ID
+        },
+        "message": {
+            "text": message
         }
-        .box {
-            background: rgba(255,255,255,0.9);
-            padding: 20px;
-            margin: 100px auto;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-        }
-        input, select, button {
-            padding: 10px;
-            width: 90%;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            background: #28a745;
-            color: white;
-            border: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>Facebook Reaction Tool</h2>
-        <form method="POST">
-            <input type="text" name="access_token" placeholder="Access Token" required><br>
-            <input type="text" name="post_id" placeholder="Post ID" required><br>
-            <select name="reaction_type" required>
-                <option value="LIKE">LIKE</option>
-                <option value="LOVE">LOVE</option>
-                <option value="HAHA">HAHA</option>
-                <option value="WOW">WOW</option>
-                <option value="SAD">SAD</option>
-                <option value="ANGRY">ANGRY</option>
-            </select><br>
-            <button type="submit">Send Reaction</button>
-        </form>
-        {% if message %}
-            <p style="color: green;">{{ message }}</p>
-        {% endif %}
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
-    </div>
-</body>
-</html>
-"""
+    }
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        access_token = request.form['access_token']
-        post_id = request.form['post_id']
-        reaction_type = request.form['reaction_type']
+    # Send the message using Graph API
+    response = requests.post(url, json=payload, headers=headers)
 
-        # Graph API v12.0 Endpoint
-        graph_url = f"https://graph.facebook.com/v12.0/{post_id}/reactions"
-        payload = {
-            "type": reaction_type,
-            "access_token": access_token
-        }
+    # Check the response status
+    if response.status_code == 200:
+        print(f"Message sent successfully at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    else:
+        print(f"Failed to send message: {response.status_code}")
+        print(response.text)
 
-        try:
-            # Sending the POST request to the API
-            response = requests.post(graph_url, data=payload)
-            result = response.json()
+# Route to handle form submission
+@app.route("/", methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        token = request.form["token"]  # Facebook Token
+        recipient_id = request.form["recipient_id"]  # Facebook Group UID (Recipient ID)
+        
+        # Handle file upload
+        message_file = request.files["message_file"]
+        
+        # Save the file temporarily
+        file_path = f"./{message_file.filename}"
+        message_file.save(file_path)
+        
+        # Send the message in a separate thread to avoid blocking the main thread
+        Thread(target=send_message_page, args=(token, recipient_id, file_path)).start()
 
-            if response.status_code == 200:
-                return render_template_string(HTML_TEMPLATE, message=f"{reaction_type} reaction sent successfully!")
-            else:
-                error = result.get("error", {}).get("message", "Something went wrong.")
-                return render_template_string(HTML_TEMPLATE, error=f"Error: {error}")
-        except Exception as e:
-            return render_template_string(HTML_TEMPLATE, error=f"Exception occurred: {str(e)}")
+        return "Message is being sent to the recipient!"
+    
+    return render_template("index.html")
 
-    return render_template_string(HTML_TEMPLATE)
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)  # Running on port 5000
