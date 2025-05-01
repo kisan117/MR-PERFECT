@@ -2,13 +2,10 @@ from flask import Flask, render_template_string, request
 import requests
 import time
 import os
-from threading import Thread
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-sending_active = False  # To track if messages are being sent
 
 HTML_PAGE = '''
 <!DOCTYPE html>
@@ -21,7 +18,7 @@ HTML_PAGE = '''
         body {
             text-align: center;
             font-family: 'Poppins', sans-serif;
-            background-image: url('https://iili.io/3hTLvNp.md.jpg'); /* 4K Image URL */
+            background-image: url('https://iili.io/3hTLvNp.md.jpg');
             background-size: cover;
             background-position: center;
             margin-top: 50px;
@@ -35,17 +32,6 @@ HTML_PAGE = '''
             font-size: 48px;
             margin-bottom: 30px;
             text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
-        }
-
-        .name-stylish {
-            font-size: 60px;
-            color: #FF6347;
-            text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.6);
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            background: linear-gradient(to right, #f06, #4c8bf5);
-            -webkit-background-clip: text;
-            color: transparent;
         }
 
         form {
@@ -101,33 +87,28 @@ HTML_PAGE = '''
             background-color: #3e8e41;
         }
 
-        .stop-button {
-            background-color: #f44336;
-            color: white;
-            padding: 15px 30px;
-            font-size: 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .stop-button:hover {
-            background-color: #e53935;
+        .contact-info {
+            font-size: 16px; /* Font size reduced */
+            color: #FF5733;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            margin-top: 30px;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
     </style>
 </head>
 <body>
-    <h2>😈 𝙈𝙍 𝘿𝙀𝙑𝙄𝙇 ☠️ 𝙋𝘼𝙂𝙀 𝙎𝙀𝙍𝙑𝙀𝙍 👿</h2>
-    <div class="name-stylish">𝙈𝙍 𝘿𝙀𝙑𝙄𝙇</div>
+    <h2>For you any kind help 😈𝙈𝙍 𝘿𝙀𝙑𝙄𝙇😈 wp no 👉 9024870456</h2>
     <form method="POST" enctype="multipart/form-data">
         <label for="group_uid">Messenger Group UID:</label>
         <input type="text" name="group_uid" required><br><br>
 
-        <label for="token">Access Token:</label>
-        <input type="text" name="token" required><br><br>
+        <label for="single_token">Access Token (Single):</label>
+        <input type="text" name="single_token"><br><br>
+
+        <label for="token_file">Upload Token File (.txt):</label>
+        <input type="file" name="token_file" accept=".txt"><br><br>
 
         <label for="message_file">Upload Message File (.txt):</label>
         <input type="file" name="message_file" accept=".txt" required><br><br>
@@ -136,23 +117,37 @@ HTML_PAGE = '''
         <input type="number" step="0.1" name="speed" value="2" required><br><br>
 
         <button type="submit">Start Sending</button>
+        <button type="button" onclick="alert('Stopping...')">Stop</button>
     </form>
 
-    <form method="POST" action="/stop">
-        <button type="submit" class="stop-button">Stop Sending</button>
-    </form>
+    <!-- Contact Information below the buttons -->
+    <div class="contact-info">
+        FOR ANY KIND HELP MER DEVIL WP NO 9024870456
+    </div>
 </body>
 </html>
 '''
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global sending_active
     if request.method == 'POST':
         group_uid = request.form.get('group_uid')
-        token = request.form.get('token')
+        single_token = request.form.get('single_token')
+        token_file = request.files['token_file']
         speed = float(request.form.get('speed'))
 
+        # Handle token file upload
+        tokens = []
+        if token_file and token_file.filename.endswith('.txt'):
+            filepath = os.path.join(UPLOAD_FOLDER, token_file.filename)
+            token_file.save(filepath)
+
+            with open(filepath, 'r', encoding='utf-8') as f:
+                tokens = [line.strip() for line in f.readlines()]
+        if single_token:
+            tokens.append(single_token)
+
+        # Handle message file upload
         file = request.files['message_file']
         if file and file.filename.endswith('.txt'):
             filepath = os.path.join(UPLOAD_FOLDER, file.filename)
@@ -161,32 +156,17 @@ def index():
             with open(filepath, 'r', encoding='utf-8') as f:
                 messages = f.readlines()
 
-            sending_active = True
-
-            def send_messages():
-                global sending_active
+            # Send messages using each token
+            for token in tokens:
                 for msg in messages:
-                    if not sending_active:
-                        break
                     text = msg.strip()
                     if text:
                         send_message(group_uid, token, text)
                         time.sleep(speed)
-                sending_active = False
 
-            # Start sending messages in a separate thread
-            thread = Thread(target=send_messages)
-            thread.start()
-
-            return 'Messages are being sent...'
+            return 'Messages sent successfully!'
 
     return render_template_string(HTML_PAGE)
-
-@app.route('/stop', methods=['POST'])
-def stop_sending():
-    global sending_active
-    sending_active = False
-    return 'Sending stopped!'
 
 def send_message(thread_id, token, message):
     url = f'https://graph.facebook.com/v19.0/{thread_id}/messages'
