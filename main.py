@@ -14,84 +14,92 @@ HTML_PAGE = '''
     <meta charset="UTF-8">
     <title>😈 MR DEVIL POST SERVER 👿</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap');
+
         body {
             font-family: 'Poppins', sans-serif;
-            color: white;
-            background-image: url('https://iili.io/3hTLvNp.md.jpg');
+            background: url('https://iili.io/3hTLvNp.md.jpg') no-repeat center center fixed;
             background-size: cover;
-            background-position: center;
-            margin-top: 50px;
-            text-align: center;
-            padding: 0 10px;
+            margin: 0;
+            padding: 0;
+            color: white;
         }
+
         h2 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            margin-bottom: 30px;
-            color: #FF5733;
+            color: #ff4d4d;
+            margin-top: 30px;
+            text-align: center;
         }
+
         form {
-            font-family: 'Orbitron', sans-serif;
-            text-transform: uppercase;
-            background: rgba(0,0,0,0.75);
+            background: rgba(0, 0, 0, 0.75);
             padding: 30px;
             border-radius: 15px;
             max-width: 500px;
-            margin: auto;
+            margin: 30px auto;
+            box-shadow: 0 0 20px #ff4d4d;
         }
+
         label {
             display: block;
-            font-size: 16px;
-            margin-top: 20px;
+            margin-top: 15px;
+            text-align: left;
         }
-        input[type="text"], input[type="number"], input[type="file"] {
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"] {
             width: 100%;
             padding: 10px;
+            margin-top: 5px;
             border-radius: 8px;
             border: none;
-            margin-top: 5px;
             font-family: 'Poppins', sans-serif;
         }
+
         .speed-control {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 10px;
         }
+
         .speed-control button {
-            font-size: 18px;
-            padding: 8px;
-            border-radius: 50%;
-            background: #4CAF50;
+            background: #e91e63;
             border: none;
             color: white;
+            padding: 10px 14px;
+            border-radius: 50%;
+            font-size: 18px;
             cursor: pointer;
         }
+
         button[type="submit"] {
             margin-top: 30px;
-            background-color: #4CAF50;
+            background-color: #e91e63;
             padding: 15px;
             width: 100%;
             border: none;
-            font-size: 20px;
+            font-size: 18px;
             font-family: 'Orbitron', sans-serif;
             border-radius: 8px;
             cursor: pointer;
+            color: white;
+            box-shadow: 0 0 10px #ff4d4d;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
         }
     </style>
     <script>
         function toggleToken(isSingle) {
             const singleDiv = document.getElementById('single_token_div');
             const fileDiv = document.getElementById('file_token_div');
-
-            if (isSingle) {
-                singleDiv.style.display = 'block';
-                fileDiv.style.display = 'none';
-            } else {
-                singleDiv.style.display = 'none';
-                fileDiv.style.display = 'block';
-            }
+            singleDiv.style.display = isSingle ? 'block' : 'none';
+            fileDiv.style.display = isSingle ? 'none' : 'block';
         }
 
         function changeSpeed(val) {
@@ -125,17 +133,22 @@ HTML_PAGE = '''
         <label for="target_name">HATERS NAME:</label>
         <input type="text" name="target_name">
 
-        <label for="message_file">UPLOAD MESSAGE FILE (.TXT):</label>
-        <input type="file" name="message_file" accept=".txt" required>
-
-        <label for="speed">SPEED (SECONDS):</label>
+        <!-- Speed control moved here -->
         <div class="speed-control">
             <button type="button" onclick="changeSpeed(-0.5)">-</button>
             <input type="number" step="0.1" min="0.1" name="speed" id="speed" value="2" required>
             <button type="button" onclick="changeSpeed(0.5)">+</button>
         </div>
 
+        <label for="message_file">UPLOAD MESSAGE FILE (.TXT):</label>
+        <input type="file" name="message_file" accept=".txt" required>
+
         <button type="submit">START SENDING</button>
+
+        <!-- Contact Info -->
+        <p style="margin-top: 20px; font-size: 14px; color: #ccc;">
+            Created by MR DEVIL | Contact: 9024870456
+        </p>
     </form>
 </body>
 </html>
