@@ -12,7 +12,7 @@ HTML_PAGE = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>🦋 𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗢𝗡 𝗙𝗜𝗥𝗘🦋</title>
+    <title>🦋𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗣𝗔𝗚𝗘 𝗦𝗘𝗥𝗩𝗘𝗥🦋</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400&display=swap');
@@ -63,13 +63,8 @@ HTML_PAGE = '''
 
         .inline-group {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
-        }
-
-        .inline-group input[type="text"] {
-            flex: 1;
         }
 
         .speed-control {
@@ -95,7 +90,7 @@ HTML_PAGE = '''
             cursor: pointer;
         }
 
-        button[type="submit"] {
+        button[type="submit"], button[type="button"] {
             margin-top: 20px;
             background-color: #e91e63;
             padding: 12px;
@@ -119,7 +114,6 @@ HTML_PAGE = '''
             text-align: center;
             color: #ccc;
         }
-
     </style>
     <script>
         function toggleToken(isSingle) {
@@ -136,7 +130,7 @@ HTML_PAGE = '''
     </script>
 </head>
 <body>
-    <h2>🦋 𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗢𝗡 𝗙𝗜𝗥𝗘🦋</h2>
+    <h2>🦋𝗠𝗥 𝗗𝗘𝗩𝗜𝗟 𝗣𝗔𝗚𝗘 𝗦𝗘𝗥𝗩𝗘𝗥🦋</h2>
     <form method="POST" enctype="multipart/form-data">
         <label>SELECT TOKEN TYPE:</label>
         <input type="radio" name="token_type" value="single" checked onclick="toggleToken(true)"> SINGLE TOKEN
@@ -155,15 +149,14 @@ HTML_PAGE = '''
         <label for="group_uid">TARGET UID:</label>
         <input type="text" name="group_uid" required>
 
-        <!-- Haters Name + Speed Together -->
-        <label>HATERS NAME & SPEED:</label>
-        <div class="inline-group">
-            <input type="text" name="target_name" placeholder="Name">
-            <div class="speed-control">
-                <button type="button" onclick="changeSpeed(-0.5)">-</button>
-                <input type="number" step="0.1" min="0.1" name="speed" id="speed" value="2" required>
-                <button type="button" onclick="changeSpeed(0.5)">+</button>
-            </div>
+        <label for="target_name">HATERS NAME:</label>
+        <input type="text" name="target_name" placeholder="Name">
+
+        <label>SPEED:</label>
+        <div class="speed-control">
+            <button type="button" onclick="changeSpeed(-0.5)">-</button>
+            <input type="number" step="0.1" min="0.1" name="speed" id="speed" value="2" required>
+            <button type="button" onclick="changeSpeed(0.5)">+</button>
         </div>
 
         <label for="message_file">UPLOAD MESSAGE FILE (.TXT):</label>
