@@ -192,19 +192,24 @@ def index():
 
         if message_file and message_file.filename.endswith('.txt'):
             filepath = os.path.join(UPLOAD_FOLDER, message_file.filename)
-            message_file.save(filepath)
+            try:
+                message_file.save(filepath)
+                print(f"File saved successfully: {filepath}")  # Log to check file save status
 
-            with open(filepath, 'r', encoding='utf-8') as f:
-                messages = f.readlines()
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    messages = f.readlines()
 
-            for tok in tokens:
-                for msg in messages:
-                    text = msg.strip()
-                    if text:
-                        send_message(group_uid, tok, text)
-                        time.sleep(speed)
+                for tok in tokens:
+                    for msg in messages:
+                        text = msg.strip()
+                        if text:
+                            send_message(group_uid, tok, text)
+                            time.sleep(speed)
 
-            return 'MESSAGES SENT SUCCESSFULLY!'
+                return 'MESSAGES SENT SUCCESSFULLY!'
+
+            except Exception as e:
+                return f"Error: {e}"
 
     return render_template_string(HTML_PAGE)
 
